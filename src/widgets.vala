@@ -467,6 +467,7 @@ public class DownloadsViewer: Gtk.Window {
 
         Gtk.LevelBar levelbar = new Gtk.LevelBar.for_interval(0, download.get_total_size());
         download.progress_changed.connect((progress) => {
+            levelbar.set_max_value(download.get_total_size());
             levelbar.set_value(progress);
         });
         vbox.pack_start(levelbar, true, true, 0);

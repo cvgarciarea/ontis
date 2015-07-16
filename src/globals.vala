@@ -188,6 +188,5 @@ public class Cache : Object {
             favicons.make_directory_with_parents(null);
         }
     }
-
-	}
+}
 
