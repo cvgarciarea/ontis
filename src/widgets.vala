@@ -164,32 +164,27 @@ public class Notebook: Gtk.Notebook {
     }
 
     public void new_page() {
-        Gtk.Box vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
-        NotebookTab tab = new NotebookTab("New page", vbox);
-
-        Toolbar toolbar = new Toolbar();
-        vbox.pack_start(toolbar, false, false, 0);
-
-        View view = new View();//this.settings);
-        view.set_toolbar(toolbar);
-        view.set_tab(tab);
+        View view = new View();
+        view.set_vexpand(true);
         view.icon_loaded.connect(this.icon_loaded_cb);
         view.new_download.connect(this.new_download_cb);
-        vbox.pack_start(view, true, true, 0);
+
+        NotebookTab tab = new NotebookTab("New page", view);
         tab.close_now.connect(this.close_tab);
+        view.set_tab(tab);
 
-        this.insert_page(vbox, tab, -1);
+        this.insert_page(view, tab, -1);
         this.show_all();
+        this.set_current_page(-1);
 
-        this.set_current_page(-2);
-        this.set_tab_reorderable(vbox, true);
+        this.set_tab_reorderable(view, true);
         view.open("google.com");
     }
 
     public void close_tab(Gtk.Box vbox) {
         this.remove_page(this.get_children().index(vbox));
 
-        if (this.get_children().length() == 1) {
+        if (this.get_children().length() == 0) {
             this.close();
         }
     }
@@ -218,25 +213,26 @@ public class Toolbar: Gtk.Box {
         this.state = LoadState.LOADING;
 
         this.button_back = new Gtk.Button();
-        this.button_back.set_image(get_image_from_name("go-previous"));
+        this.button_back.set_image(get_image_from_name("go-previous", 20));
         this.button_back.set_relief(Gtk.ReliefStyle.NONE);
         this.pack_start(this.button_back, false, false, 0);
 
         this.button_forward = new Gtk.Button();
-        this.button_forward.set_image(get_image_from_name("go-next"));
+        this.button_forward.set_image(get_image_from_name("go-next", 20));
         this.button_forward.set_relief(Gtk.ReliefStyle.NONE);
         this.pack_start(this.button_forward, false, false, 0);
 
         this.button_reload = new Gtk.Button();
-        this.button_reload.set_image(get_image_from_name("view-refresh"));
+        this.button_reload.set_image(get_image_from_name("view-refresh", 20));
         this.button_reload.set_relief(Gtk.ReliefStyle.NONE);
         this.pack_start(this.button_reload, false, false, 0);
 
         this.entry = new Gtk.Entry();
+        this.modify_font(Pango.FontDescription.from_string("10"));
         this.pack_start(this.entry, true, true, 0);
 
         this.button_preferences = new Gtk.Button();
-        this.button_preferences.set_image(get_image_from_name("preferences-system"));
+        this.button_preferences.set_image(get_image_from_name("preferences-system", 20));
         this.button_preferences.set_relief(Gtk.ReliefStyle.NONE);
         this.pack_start(this.button_preferences, false, false, 0);
     }
@@ -246,12 +242,12 @@ public class Toolbar: Gtk.Box {
         if (this.state == LoadState.LOADING) {
             this.button_reload.set_image(get_image_from_name("view-refresh"));
         } else if (this.state == LoadState.FINISHED) {
-            this.button_reload.set_image(get_image_from_name("process-stop"));
+            this.button_reload.set_image(get_image_from_name("window-close"));
         }
     }
 }
 
-public class View: Gtk.ScrolledWindow {
+public class View: Gtk.Box {
 
     public signal void icon_loaded(Gdk.Pixbuf? pixbuf);
     public signal void new_download(WebKit.Download download); // pixbuf;
@@ -265,7 +261,33 @@ public class View: Gtk.ScrolledWindow {
     public WebKit.WebView view;
 
     public Cache cache;
+
     public View() {
+        this.set_orientation(Gtk.Orientation.VERTICAL);
+
+        this.toolbar = new Toolbar();
+        this.pack_start(this.toolbar, false, false, 0);
+
+        this.button_back = this.toolbar.button_back;
+        this.button_back.clicked.connect(this.back);
+
+        this.button_forward = this.toolbar.button_forward;
+        this.button_forward.clicked.connect(this.forward);
+
+        this.button_reload = this.toolbar.button_reload;
+        this.button_reload.clicked.connect(this.reload_stop);
+
+        this.entry = this.toolbar.entry;
+        this.entry.activate.connect(() => {
+            this.open(this.entry.get_text());
+        });
+
+        Gtk.Box hbox = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
+        this.pack_start(hbox, true, true, 0);
+
+        Gtk.ScrolledWindow scroll = new Gtk.ScrolledWindow(null, null);
+        hbox.pack_start(scroll, true, true, 0);
+
         this.view = new WebKit.WebView();
         this.view.title_changed.connect(this.title_changed_cb);
         this.view.download_requested.connect(this.download_requested_cb);
@@ -279,7 +301,7 @@ public class View: Gtk.ScrolledWindow {
         //this.view.connect('hovering-over-link', self.__hovering_over_link_cb)
         //this.view.connect('status-bar-text-changed', self.__status_bar_text_changed_cb)
         //this.view.connect('geolocation-policy-decision-requested', self.__gelocation_requested_cb)
-        this.add(this.view);
+        scroll.add(this.view);
 
         this.cache = new Cache();
     }
@@ -411,24 +433,6 @@ public class View: Gtk.ScrolledWindow {
 
     public void reload() {
         this.view.reload();
-    }
-
-    public void set_toolbar(Toolbar toolbar) {
-        this.toolbar = toolbar;
-
-        this.button_back = this.toolbar.button_back;
-        this.button_back.clicked.connect(this.back);
-
-        this.button_forward = this.toolbar.button_forward;
-        this.button_forward.clicked.connect(this.forward);
-
-        this.button_reload = this.toolbar.button_reload;
-        this.button_reload.clicked.connect(this.reload_stop);
-
-        this.entry = this.toolbar.entry;
-        this.entry.activate.connect(() => {
-            this.open(this.entry.get_text());
-        });
     }
 
     public void set_tab(NotebookTab tab) {
