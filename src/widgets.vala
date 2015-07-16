@@ -46,7 +46,7 @@ public class NotebookTab: Gtk.Box {
         this.spinner = new Gtk.Spinner();
 
         this.button = new Gtk.Button();
-        this.button.set_image(get_image_from_name("window-close"));
+        this.button.set_image(get_image_from_name("window-close", 16));
         this.button.clicked.connect(this.close);
         this.pack_end(this.button, false, false, 0);
 
@@ -99,20 +99,33 @@ public class NotebookTab: Gtk.Box {
                 this.spinner.stop();
                 this.remove(this.spinner);
                 this.pack_start(this.icon, false, false, 0);
-                // load favicon
                 break;
         }
 
         this.show_all();
+    }
+
+    public void set_pixbuf(Gdk.Pixbuf? pixbuf) {
+        if (this.state == LoadState.FINISHED) {
+            this.remove(this.icon);
+        }
+
+        if (pixbuf != null) {
+            this.icon = new Gtk.Image.from_pixbuf(pixbuf);
+        } else {
+            this.icon = new Gtk.Image.from_stock(Gtk.Stock.FILE, Gtk.IconSize.MENU);
+        }
+
+        if (this.state == LoadState.FINISHED) {
+            this.pack_start(this.icon, false, false, 0);
+            this.show_all();
+        }
     }
 }
 
 public class Notebook: Gtk.Notebook {
 
     public signal void close();
-    public signal void move_to(int x, int y);
-    public signal void minimize();
-    public signal void maximize();
     public signal void show_download_manager();
 
     public bool dragging;
@@ -124,45 +137,16 @@ public class Notebook: Gtk.Notebook {
     public Notebook(DownloadManager download_manager) {
         this.download_manager = download_manager;
 
-        Gtk.Box hbox = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
-
         Gtk.Button button = new Gtk.Button();
         button.set_relief(Gtk.ReliefStyle.NONE);
-        button.set_image(get_image_from_name("list-add", 16));
+        button.set_image(get_image_from_name("tab-new-symbolic", 16));
         button.clicked.connect(this.new_page);
-        hbox.pack_start(button, false, false, 5);
+        this.set_action_widget(button, Gtk.PackType.END);
+        button.show_all();
 
-        button = new Gtk.Button();
-        button.set_relief(Gtk.ReliefStyle.NONE);
-        button.set_image(get_image_from_name("window-close", 16));
-        button.clicked.connect(this.close_now);
-        hbox.pack_end(button, false, false, 0);
-
-        button = new Gtk.Button();
-        button.set_relief(Gtk.ReliefStyle.NONE);
-        button.set_image(get_image_from_name("window-maximize", 16));
-        button.clicked.connect(this.maximize_now);
-        hbox.pack_end(button, false, false, 0);
-
-        button = new Gtk.Button();
-        button.set_relief(Gtk.ReliefStyle.NONE);
-        button.set_image(get_image_from_name("window-minimize", 16));
-        button.clicked.connect(this.minimize_now);
-        hbox.pack_end(button, false, false, 0);
-
-        hbox.show_all();
-
-        this.set_action_widget(hbox, Gtk.PackType.END);
         this.set_scrollable(true);
-        this.add_events(Gdk.EventMask.SCROLL_MASK |
-                        Gdk.EventMask.BUTTON_PRESS_MASK |
-                        Gdk.EventMask.BUTTON_RELEASE_MASK |
-                        Gdk.EventMask.POINTER_MOTION_MASK);
-
+        this.add_events(Gdk.EventMask.SCROLL_MASK);
         this.scroll_event.connect(scroll_event_cb);
-        this.motion_notify_event.connect(motion_event_cb);
-        this.button_press_event.connect(button_press_event_cb);
-        this.button_release_event.connect(button_release_event_cb);
     }
 
     private bool scroll_event_cb(Gtk.Widget self, Gdk.EventScroll event) {
@@ -179,35 +163,6 @@ public class Notebook: Gtk.Notebook {
         return false;
     }
 
-    private bool motion_event_cb(Gtk.Widget self, Gdk.EventMotion event) {
-        if (!this.dragging) {
-            return false;
-        }
-
-        //this.move_to((int)(event.x - this.dragging_x), (int)(event.y - this.dragging_y));
-        return false;
-    }
-
-    private bool button_press_event_cb(Gtk.Widget self, Gdk.EventButton event) {
-        if (event.button != 1) {
-            return false;
-        }
-
-        this.dragging = true;
-        this.dragging_x = (int)event.x;
-        this.dragging_y = (int)event.y;
-        return false;
-    }
-
-    private bool button_release_event_cb(Gtk.Widget self, Gdk.EventButton event) {
-        if (event.button != 1) {
-            return false;
-        }
-
-        this.dragging = false;
-        return false;
-    }
-
     public void new_page() {
         Gtk.Box vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
         NotebookTab tab = new NotebookTab("New page", vbox);
@@ -218,6 +173,7 @@ public class Notebook: Gtk.Notebook {
         View view = new View();//this.settings);
         view.set_toolbar(toolbar);
         view.set_tab(tab);
+        view.icon_loaded.connect(this.icon_loaded_cb);
         view.new_download.connect(this.new_download_cb);
         vbox.pack_start(view, true, true, 0);
         tab.close_now.connect(this.close_tab);
@@ -225,7 +181,7 @@ public class Notebook: Gtk.Notebook {
         this.insert_page(vbox, tab, -1);
         this.show_all();
 
-        this.set_current_page(-1);
+        this.set_current_page(-2);
         this.set_tab_reorderable(vbox, true);
         view.open("google.com");
     }
@@ -233,21 +189,13 @@ public class Notebook: Gtk.Notebook {
     public void close_tab(Gtk.Box vbox) {
         this.remove_page(this.get_children().index(vbox));
 
-        if (this.get_children().length() == 0) {
+        if (this.get_children().length() == 1) {
             this.close();
         }
     }
 
-    private void minimize_now(Gtk.Button button) {
-        this.minimize();
-    }
-
-    private void maximize_now(Gtk.Button button) {
-        this.maximize();
-    }
-
-    private void close_now(Gtk.Button button) {
-        this.close();
+    private void icon_loaded_cb(View view, Gdk.Pixbuf? pixbuf) {
+        view.tab.set_pixbuf(pixbuf);
     }
 
     private void new_download_cb(WebKit.Download download) {
@@ -305,7 +253,7 @@ public class Toolbar: Gtk.Box {
 
 public class View: Gtk.ScrolledWindow {
 
-    public signal void icon_loaded(Gdk.Pixbuf pixbuf);
+    public signal void icon_loaded(Gdk.Pixbuf? pixbuf);
     public signal void new_download(WebKit.Download download); // pixbuf;
 
     public Toolbar toolbar;
@@ -316,6 +264,7 @@ public class View: Gtk.ScrolledWindow {
     public NotebookTab tab;
     public WebKit.WebView view;
 
+    public Cache cache;
     public View() {
         this.view = new WebKit.WebView();
         this.view.title_changed.connect(this.title_changed_cb);
@@ -331,6 +280,8 @@ public class View: Gtk.ScrolledWindow {
         //this.view.connect('status-bar-text-changed', self.__status_bar_text_changed_cb)
         //this.view.connect('geolocation-policy-decision-requested', self.__gelocation_requested_cb)
         this.add(this.view);
+
+        this.cache = new Cache();
     }
 
     private void title_changed_cb(WebKit.WebView view, WebKit.WebFrame frame, string title) {
@@ -344,26 +295,44 @@ public class View: Gtk.ScrolledWindow {
     }
 
     private void icon_loaded_cb(WebKit.WebView view, string icon_uri) {
-        Gdk.Pixbuf pixbuf;
+		Soup.URI uri = new Soup.URI(icon_uri);
+		string filename = @"$(this.cache.FAVICONS)/$(uri.host)_$(uri.port).ico";
+		GLib.File file = GLib.File.new_for_path(filename);
+		if (file.query_exists()) {
+			try {
+				Gdk.Pixbuf pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename, 16, 16, true);
+				this.icon_loaded(pixbuf);
+			} catch (GLib.Error e) {
+				try {
+					file.delete(null);
+				} catch (GLib.Error e) {
+				}
+			}
+		} else {
+			this.icon_loaded(null);
+			Soup.Session session = WebKit.get_default_session();
+			Soup.Message message = new Soup.Message.from_uri("GET", uri);
+			session.queue_message(message, this.icon_downloaded_cb);
+		}
+	}
 
-        if (this.view.get_uri() != null) {
-            bool download = check_needs_download_favicon(this.view.get_uri());
-            if (download) {
-                //FaviconDownloader fdownloader = new FaviconDownloader(icon_uri, this.view.get_uri());
-                //fdownloader.finish.connect(this.icon_changed);
-                //var database = new WebKit.FaviconDatabase();
-                //pixbuf = database.try_get_favicon_pixbuf(this.view.get_uri(), 16, 16);
-                //this.icon_loaded(pixbuf);
-            } else {
-                pixbuf = new Gdk.Pixbuf.from_file_at_size(get_favicon_file(this.view.get_uri()), 16, 16);
-                this.icon_loaded(pixbuf);
-            }
-        }
+    private void icon_downloaded_cb(Soup.Session session, Soup.Message message) {
+		unowned Soup.MessageBody body = message.response_body;
+		GLib.MemoryInputStream stream = new GLib.MemoryInputStream.from_data(body.data, null);
+		try {
+			Gdk.Pixbuf pixbuf = new Gdk.Pixbuf.from_stream_at_scale(stream, 16, 16, true, null);
+			this.icon_loaded(pixbuf);
+			try {
+				unowned Soup.URI uri = message.get_uri();
+				string filename = @"$(uri.host)_$(uri.port).ico";
+				pixbuf.save(@"$(this.cache.FAVICONS)/$filename", "ico");
+			} catch (Error e) {
+			}
+		} catch (Error e) {
+			this.icon_loaded(null);
+		}
     }
 
-    private void icon_changed(FaviconDownloader downloader, string path) {
-        //this.icon_loaded(path);
-    }
     //private bool load_error_cb(WebKit.WebView view, WebKit.WebFrame frame, string uri) {
     //    return false;
     //}
@@ -498,7 +467,6 @@ public class DownloadsViewer: Gtk.Window {
 
         Gtk.LevelBar levelbar = new Gtk.LevelBar.for_interval(0, download.get_total_size());
         download.progress_changed.connect((progress) => {
-            stdout.printf("progress %d %d\n", progress, download.total_size);
             levelbar.set_value(progress);
         });
         vbox.pack_start(levelbar, true, true, 0);

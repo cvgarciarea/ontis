@@ -21,12 +21,20 @@ enum LoadState {
     FINISHED,
 }
 
+public string get_download_dir() {
+    return GLib.Environment.get_user_special_dir(GLib.UserDirectory.DOWNLOAD);
+}
+
 public string get_work_dir() {
     return GLib.Path.build_filename(GLib.Environment.get_user_config_dir(), "ontis");
 }
 
+public string get_cache_dir() {
+    return GLib.Path.build_filename(GLib.Environment.get_user_cache_dir(), "ontis");
+}
+
 public string get_favicons_path() {
-    return GLib.Path.build_filename(get_work_dir(), "favicons");
+    return GLib.Path.build_filename(get_cache_dir(), "favicons");
 }
 
 public string get_history() {
@@ -36,28 +44,6 @@ public string get_history() {
 public string search_in_google(string search) {
     string text = search.replace(" ", "+");
     return "https://www.google.com.uy/?gws_rd=cr&ei=vRJEVaPsNImlgwSh44DYBA#q=%s".printf(text);
-}
-
-public string get_favicon_name(string uri) {
-    return uri.replace("//", ";;").split("/")[0];
-}
-
-public string get_favicon_file(string uri) {
-    return GLib.Path.build_filename(get_favicons_path(), get_favicon_name(uri));
-}
-
-public bool check_needs_download_favicon(string uri) {
-    var directory = File.new_for_path(get_favicons_path());
-    var enumerator = directory.enumerate_children(FileAttribute.STANDARD_NAME, 0);
-    FileInfo file_info;
-    bool in_dir = false;
-    string icon_name = get_favicon_name(uri);
-
-    while((file_info = enumerator.next_file()) != null && !in_dir) {
-        in_dir = file_info.get_name() == icon_name;
-    }
-
-    return in_dir;
 }
 
 public string parse_uri(string uri) {
@@ -94,37 +80,6 @@ public Gtk.Image get_image_from_name(string icon, int size=24) {
 }
 
 public void save_to_history(string uri, string name) {
-}
-
-public void check_paths() {
-}
-
-public string get_download_dir() {
-    return GLib.Environment.get_user_special_dir(GLib.UserDirectory.DOWNLOAD);
-}
-
-public class FaviconDownloader: GLib.Object {
-
-    public signal void finish();
-
-    public string favicon_url;
-    public string website_url;
-    public string name;
-
-    public FaviconDownloader(string favicon_url, string website_url) {
-        check_paths();
-
-        this.favicon_url = favicon_url;
-        this.website_url = website_url;
-        this.name = get_favicon_name(this.website_url);
-        this.download();
-    }
-
-    private void download() {
-    //    path = os.path.join(FAVICONS_PATH, this.name)
-    //    response = urlretrieve(this.favicon_url, path)
-    //    this.finish();
-    }
 }
 
 public class Download: GLib.Object {
@@ -213,4 +168,26 @@ public class DownloadManager: GLib.Object {
         this.new_download(download);
     }
 }
+
+public class Cache : Object {
+    public string BASE_DIRECTORY;
+    public string FAVICONS;
+    public string DATABASES;
+    public string COOKIES;
+	public string DOWNLOADS;
+
+    public Cache () {
+        BASE_DIRECTORY = get_cache_dir();
+        FAVICONS = get_favicons_path();
+        DATABASES = GLib.Path.build_filename(BASE_DIRECTORY, "databases");
+        COOKIES = GLib.Path.build_filename(BASE_DIRECTORY, "cookies.txt");
+        DOWNLOADS = get_download_dir();
+        GLib.File favicons = GLib.File.new_for_path(FAVICONS);
+
+        if (!favicons.query_exists()) {
+            favicons.make_directory_with_parents(null);
+        }
+    }
+
+	}
 
