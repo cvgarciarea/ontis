@@ -52,11 +52,15 @@ public void check_paths() {
     GLib.File history_path = GLib.File.new_for_path(get_history_path());
 
     if (!work_dir.query_exists()) {
-        work_dir.make_directory_with_parents(null);
+        try {
+            work_dir.make_directory_with_parents(null);
+        } catch(GLib.Error e) {}
     }
 
     if (!history_path.query_exists()) {
-        history_path.create_readwrite(GLib.FileCreateFlags.NONE, null);
+        try {
+            history_path.create_readwrite(GLib.FileCreateFlags.NONE, null);
+        } catch(GLib.Error e) {}
     }
 }
 
@@ -108,7 +112,10 @@ public void save_to_history(string uri, string name) {
     root_node.set_array(history);
 
     var generator = new Json.Generator(){pretty=true, root=root_node};
-    generator.to_file(get_history_path());
+
+    try {
+        generator.to_file(get_history_path());
+    } catch(GLib.Error e) {}
 }
 
 public Json.Array get_history() {
@@ -226,7 +233,9 @@ public class Cache : Object {
         GLib.File favicons = GLib.File.new_for_path(FAVICONS);
 
         if (!favicons.query_exists()) {
-            favicons.make_directory_with_parents(null);
+            try {
+                favicons.make_directory_with_parents(null);
+            } catch(GLib.Error e) {}
         }
     }
 }

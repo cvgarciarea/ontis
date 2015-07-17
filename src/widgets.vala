@@ -40,7 +40,7 @@ public class NotebookTab: Gtk.Box {
 
         this.vbox = vbox;
 
-        this.icon = new Gtk.Image.from_stock(Gtk.Stock.FILE, Gtk.IconSize.MENU);
+        this.icon = get_image_from_name("text-x-generic-symbolic", 16);
         this.pack_start(this.icon, false, false, 0);
 
         this.spinner = new Gtk.Spinner();
@@ -113,7 +113,7 @@ public class NotebookTab: Gtk.Box {
         if (pixbuf != null) {
             this.icon = new Gtk.Image.from_pixbuf(pixbuf);
         } else {
-            this.icon = new Gtk.Image.from_stock(Gtk.Stock.FILE, Gtk.IconSize.MENU);
+            this.icon = get_image_from_name("text-x-generic-symbolic", 16);
         }
 
         if (this.state == LoadState.FINISHED) {
@@ -126,10 +126,6 @@ public class NotebookTab: Gtk.Box {
 public class Notebook: Gtk.Notebook {
 
     public signal void close();
-
-    public bool dragging;
-    public int dragging_x;
-    public int dragging_y;
 
     public DownloadManager download_manager;
 
@@ -227,7 +223,7 @@ public class Toolbar: Gtk.Box {
         this.pack_start(this.button_reload, false, false, 0);
 
         this.entry = new Gtk.Entry();
-        this.modify_font(Pango.FontDescription.from_string("10"));
+        this.override_font(Pango.FontDescription.from_string("10"));
         this.pack_start(this.entry, true, true, 0);
 
         this.button_preferences = new Gtk.Button();
@@ -306,9 +302,7 @@ public class View: Gtk.Box {
         this.view.load_finished.connect(this.load_finishied_cb);
         this.view.load_committed.connect(this.load_committed_cb);
         this.view.mime_type_policy_decision_requested.connect(this.mime_type_policy_decision_requested_cb);
-        //this.view.connect('hovering-over-link', self.__hovering_over_link_cb)
         //this.view.connect('status-bar-text-changed', self.__status_bar_text_changed_cb)
-        //this.view.connect('geolocation-policy-decision-requested', self.__gelocation_requested_cb)
         this.scroll.add(this.view);
 
         this.cache = new Cache();
