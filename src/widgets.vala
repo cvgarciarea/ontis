@@ -408,6 +408,11 @@ public class View: Gtk.Box {
                 this.history_view.update();
                 break;
 
+            case "ontis://downloads":
+                this.set_current_view(ViewMode.DOWNLOADS);
+                this.downloads_view.update();
+                break;
+
             default:
                 this.set_current_view(ViewMode.WEB);
                 this.view.open(parse_uri(uri));
@@ -542,20 +547,25 @@ public class HistoryView: Gtk.ScrolledWindow {
     }
 }
 
-public class DownloadsView: Gtk.Window {
+public class DownloadsView: Gtk.Box {
 
     public DownloadManager download_manager;
     public Gtk.ListBox listbox;
 
     public DownloadsView(DownloadManager download_manager) {
+        this.set_orientation(Gtk.Orientation.VERTICAL);
+
         this.download_manager = download_manager;
         this.download_manager.new_download.connect(new_download_cb);
 
         Gtk.ScrolledWindow scroll = new Gtk.ScrolledWindow(null, null);
-        this.add(scroll);
+        this.pack_start(scroll, true, true, 0);
 
         this.listbox = new Gtk.ListBox();
         scroll.add(this.listbox);
+    }
+
+    public void update() {
     }
 
     private void new_download_cb(DownloadManager dm, Download download) {
@@ -572,6 +582,7 @@ public class DownloadsView: Gtk.Window {
         hbox.pack_start(vbox, true, true, 0);
 
         Gtk.LevelBar levelbar = new Gtk.LevelBar.for_interval(0, download.get_total_size());
+        levelbar.set_vexpand(false);
         download.progress_changed.connect((progress) => {
             levelbar.set_max_value(download.get_total_size());
             levelbar.set_value(progress);
