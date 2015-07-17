@@ -126,7 +126,6 @@ public class NotebookTab: Gtk.Box {
 public class Notebook: Gtk.Notebook {
 
     public signal void close();
-    public signal void show_download_manager();
 
     public bool dragging;
     public int dragging_x;
@@ -164,7 +163,7 @@ public class Notebook: Gtk.Notebook {
     }
 
     public void new_page() {
-        View view = new View();
+        View view = new View(this.download_manager);
         view.set_vexpand(true);
         view.icon_loaded.connect(this.icon_loaded_cb);
         view.new_download.connect(this.new_download_cb);
@@ -258,12 +257,24 @@ public class View: Gtk.Box {
     public Gtk.Button button_reload;
     public Gtk.Entry entry;
     public NotebookTab tab;
+    public Gtk.Box hbox;
+    public Gtk.ScrolledWindow scroll;
     public WebKit.WebView view;
-
+    public HistoryView history_view;
+    public DownloadsView downloads_view;
     public Cache cache;
+    public DownloadManager download_manager;
 
-    public View() {
+    public int actual_view;
+
+    public View(DownloadManager download_manager) {
         this.set_orientation(Gtk.Orientation.VERTICAL);
+
+        this.actual_view = ViewMode.WEB;
+
+        this.download_manager = download_manager;
+        this.history_view = new HistoryView();
+        this.downloads_view = new DownloadsView(this.download_manager);
 
         this.toolbar = new Toolbar();
         this.pack_start(this.toolbar, false, false, 0);
@@ -282,11 +293,8 @@ public class View: Gtk.Box {
             this.open(this.entry.get_text());
         });
 
-        Gtk.Box hbox = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
-        this.pack_start(hbox, true, true, 0);
-
-        Gtk.ScrolledWindow scroll = new Gtk.ScrolledWindow(null, null);
-        hbox.pack_start(scroll, true, true, 0);
+        this.scroll = new Gtk.ScrolledWindow(null, null);
+        this.pack_start(this.scroll, true, true, 0);
 
         this.view = new WebKit.WebView();
         this.view.title_changed.connect(this.title_changed_cb);
@@ -301,7 +309,7 @@ public class View: Gtk.Box {
         //this.view.connect('hovering-over-link', self.__hovering_over_link_cb)
         //this.view.connect('status-bar-text-changed', self.__status_bar_text_changed_cb)
         //this.view.connect('geolocation-policy-decision-requested', self.__gelocation_requested_cb)
-        scroll.add(this.view);
+        this.scroll.add(this.view);
 
         this.cache = new Cache();
     }
@@ -393,18 +401,56 @@ public class View: Gtk.Box {
     }
 
     public void open(string uri) {
-        this.view.open(parse_uri(uri));
+        switch(uri) {
+            case "ontis://history":
+                this.set_current_view(ViewMode.HISTORY);
+                this.tab.set_title("History");
+                this.history_view.update();
+                break;
 
-        //if not uri.startswith('ontis://'):
-        //    url = parse_uri(uri)
+            default:
+                this.set_current_view(ViewMode.WEB);
+                this.view.open(parse_uri(uri));
+                break;
+        }
+    }
 
-        //    if url:
-        //        self.entry.set_text(url)
-        //        self.view.open(url)
+    public void set_current_view(int view) {
+        if (this.actual_view == view) {
+            return;
+        }
 
-        //else:
-        //    if uri == 'ontis://history':
-        //        self.open_history()
+        switch(this.actual_view) {
+            case ViewMode.WEB:
+                this.remove(this.scroll);
+                break;
+
+            case ViewMode.HISTORY:
+                this.remove(this.history_view);
+                break;
+
+            case ViewMode.DOWNLOADS:
+                this.remove(this.downloads_view);
+                break;
+        }
+
+        this.actual_view = view;
+        switch(this.actual_view) {
+            case ViewMode.WEB:
+                this.pack_start(this.scroll, true, true, 0);
+                break;
+
+            case ViewMode.HISTORY:
+                this.pack_start(this.history_view, true, true, 0);
+                break;
+
+            case ViewMode.DOWNLOADS:
+                this.pack_start(this.downloads_view, true, true, 0);
+                break;
+        }
+
+        this.show_all();
+
     }
 
     public void back(Gtk.Button? button=null) {
@@ -440,12 +486,68 @@ public class View: Gtk.Box {
     }
 }
 
-public class DownloadsViewer: Gtk.Window {
+public class HistoryView: Gtk.ScrolledWindow {
+
+    public signal void open_url(string url);
+
+    public Gtk.ListBox listbox;
+
+    public HistoryView() {
+        this.listbox = new Gtk.ListBox();
+        this.listbox.set_selection_mode(Gtk.SelectionMode.NONE);
+        this.add(this.listbox);
+    }
+
+    public void update(string search="") {
+        foreach (Gtk.Widget lrow in this.listbox.get_children()) {
+            this.listbox.remove(lrow);
+        }
+
+        Json.Array history = get_history();
+        GLib.List<unowned Json.Node> elements = history.get_elements();
+        elements.reverse();
+
+        foreach (Json.Node node in elements) {
+            string data = node.dup_string();
+            string date = data.split(" ")[0];
+            string time = data.split(" ")[1];
+            string name = data.split(" ")[2];
+            string url = data.split(" ")[3];
+
+            if (search != "" || (!(search in name) && !(search in url))) {
+                continue;
+            }
+
+            Gtk.ListBoxRow row = new Gtk.ListBoxRow();
+            this.listbox.add(row);
+
+            Gtk.Box hbox = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 10);
+            row.add(hbox);
+
+            Gtk.CheckButton cbutton = new Gtk.CheckButton();
+            cbutton.set_label("%s %s".printf(date, time));
+            hbox.pack_start(cbutton, false, false, 0);
+
+            Gtk.LinkButton lbutton = new Gtk.LinkButton.with_label(url, name + " " + url);
+            lbutton.activate_link.connect(this.open_link);
+            hbox.pack_start(lbutton, false, false, 0);
+        }
+
+        this.show_all();
+    }
+
+    private bool open_link(Gtk.LinkButton button) {
+        this.open_url(button.get_uri());
+        return true;
+    }
+}
+
+public class DownloadsView: Gtk.Window {
 
     public DownloadManager download_manager;
     public Gtk.ListBox listbox;
 
-    public DownloadsViewer(DownloadManager download_manager) {
+    public DownloadsView(DownloadManager download_manager) {
         this.download_manager = download_manager;
         this.download_manager.new_download.connect(new_download_cb);
 

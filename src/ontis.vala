@@ -25,7 +25,6 @@ public class Ontis: Gtk.Window {
     public Canvas canvas;
     public DownloadManager download_manager;
     public Notebook notebook;
-    public DownloadsViewer downloads_viewer;
 
     public Ontis() {
         this.set_default_size(400, 280);
@@ -38,11 +37,7 @@ public class Ontis: Gtk.Window {
 
         this.notebook = new Notebook(this.download_manager);
         this.notebook.close.connect(this.close_now);
-        this.notebook.show_download_manager.connect(this.show_download_manager_cb);
         this.canvas.pack_start(this.notebook, true, true, 0);
-
-        this.downloads_viewer = new DownloadsViewer(this.download_manager);
-        this.hide();
 
         this.destroy.connect(destroy_cb);
         this.notebook.new_page();
@@ -56,10 +51,6 @@ public class Ontis: Gtk.Window {
 
     public void close_now() {
         this.destroy();
-    }
-
-    public void show_download_manager_cb() {
-        this.downloads_viewer.show_all();
     }
 }
 

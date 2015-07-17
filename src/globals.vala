@@ -21,6 +21,12 @@ enum LoadState {
     FINISHED,
 }
 
+enum ViewMode {
+    WEB,
+    HISTORY,
+    DOWNLOADS,
+}
+
 public string get_download_dir() {
     return GLib.Environment.get_user_special_dir(GLib.UserDirectory.DOWNLOAD);
 }
@@ -37,8 +43,21 @@ public string get_favicons_path() {
     return GLib.Path.build_filename(get_cache_dir(), "favicons");
 }
 
-public string get_history() {
+public string get_history_path() {
     return GLib.Path.build_filename(get_work_dir(), "history.json");
+}
+
+public void check_paths() {
+    GLib.File work_dir = GLib.File.new_for_path(get_work_dir());
+    GLib.File history_path = GLib.File.new_for_path(get_history_path());
+
+    if (!work_dir.query_exists()) {
+        work_dir.make_directory_with_parents(null);
+    }
+
+    if (!history_path.query_exists()) {
+        history_path.create_readwrite(GLib.FileCreateFlags.NONE, null);
+    }
 }
 
 public string search_in_google(string search) {
@@ -80,6 +99,28 @@ public Gtk.Image get_image_from_name(string icon, int size=24) {
 }
 
 public void save_to_history(string uri, string name) {
+    var now = new DateTime.now_local();
+    Json.Array history = get_history();
+    string data = now.format("%x %X") + " %s %s".printf(name, uri);
+    history.add_string_element(data);
+
+    var root_node = new Json.Node(Json.NodeType.ARRAY);
+    root_node.set_array(history);
+
+    var generator = new Json.Generator(){pretty=true, root=root_node};
+    generator.to_file(get_history_path());
+}
+
+public Json.Array get_history() {
+    check_paths();
+    string dir = get_history_path();
+    Json.Parser parser = new Json.Parser();
+    try {
+    	parser.load_from_file(dir);
+	    return parser.get_root().get_array();
+    } catch {
+        return new Json.Array();
+    }
 }
 
 public class Download: GLib.Object {
