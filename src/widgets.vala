@@ -125,6 +125,7 @@ public class NotebookTab: Gtk.Box {
 
 public class Notebook: Gtk.Notebook {
 
+    public signal void full_screen();
     public signal void close();
 
     public DownloadManager download_manager;
@@ -142,6 +143,19 @@ public class Notebook: Gtk.Notebook {
         this.set_scrollable(true);
         this.add_events(Gdk.EventMask.SCROLL_MASK);
         this.scroll_event.connect(scroll_event_cb);
+    }
+
+    public void set_topbar_visible(bool visible) {
+        this.set_show_tabs(visible);
+
+        foreach (Gtk.Widget widget in this.get_children()) {
+            View view = (View)widget;
+            if (visible) {
+                view.toolbar.show_all();
+            } else {
+                view.toolbar.hide();
+            }
+        }
     }
 
     private bool scroll_event_cb(Gtk.Widget self, Gdk.EventScroll event) {
@@ -616,6 +630,7 @@ public class DownloadsView: Gtk.Box {
 public class ZoomScale: Gtk.Box {
 
     public signal void zoom_changed(int z);
+
     Gtk.DrawingArea area;
     Gtk.Label label;
 
