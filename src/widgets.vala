@@ -136,7 +136,7 @@ public class Notebook: Gtk.Notebook {
         Gtk.Button button = new Gtk.Button();
         button.set_relief(Gtk.ReliefStyle.NONE);
         button.set_image(get_image_from_name("tab-new-symbolic", 16));
-        button.clicked.connect(this.new_page);
+        button.clicked.connect(this.new_page_from_widget);
         this.set_action_widget(button, Gtk.PackType.END);
         button.show_all();
 
@@ -172,7 +172,7 @@ public class Notebook: Gtk.Notebook {
         return false;
     }
 
-    public void new_page() {
+    public void new_page(string? url="google.com") {
         View view = new View(this.download_manager);
         view.set_vexpand(true);
         view.icon_loaded.connect(this.icon_loaded_cb);
@@ -182,12 +182,16 @@ public class Notebook: Gtk.Notebook {
         tab.close_now.connect(this.close_tab);
         view.set_tab(tab);
 
-        this.insert_page(view, tab, -1);
+        this.insert_page(view, tab, -2);
         this.show_all();
-        this.set_current_page(-1);
+        this.set_current_page(-2);
 
         this.set_tab_reorderable(view, true);
-        view.open("google.com");
+        view.open(url);
+    }
+
+    public void new_page_from_widget(Gtk.Widget widget) {
+        this.new_page();
     }
 
     public void close_tab(Gtk.Box vbox) {
@@ -213,7 +217,8 @@ public class Toolbar: Gtk.Box {
     public Gtk.Button button_forward;
     public Gtk.Button button_reload;
     public Gtk.Entry entry;
-    public Gtk.Button button_preferences;
+    public Gtk.Popover popover;
+    public Gtk.ToggleButton button_menu;
 
     public int state;
 
@@ -240,10 +245,24 @@ public class Toolbar: Gtk.Box {
         this.override_font(Pango.FontDescription.from_string("10"));
         this.pack_start(this.entry, true, true, 0);
 
-        this.button_preferences = new Gtk.Button();
-        this.button_preferences.set_image(get_image_from_name("preferences-system", 20));
-        this.button_preferences.set_relief(Gtk.ReliefStyle.NONE);
-        this.pack_start(this.button_preferences, false, false, 0);
+        this.button_menu = new Gtk.ToggleButton();
+        this.button_menu.set_image(get_image_from_name("preferences-system", 20));
+        this.button_menu.set_relief(Gtk.ReliefStyle.NONE);
+        this.button_menu.toggled.connect(this.show_popover);
+        this.pack_start(this.button_menu, false, false, 0);
+
+        GLib.Menu menu = new GLib.Menu();
+        menu.append_item(get_item("New tab", "app.new-tab"));
+        menu.append_item(get_item("New window", "app.new-window"));
+        menu.append_item(get_item("New private window", "app.new-private-window"));
+        // separator
+        menu.append_item(get_item("History", "app.history"));
+        menu.append_item(get_item("Downloads", "app.downloads"));
+        menu.append_item(get_item("Recent tabs", "app.recent-tabs"));
+        menu.append_item(get_item("Favorites", "app.favorites"));
+
+        this.popover = new Gtk.Popover.from_model(this.button_menu, menu);
+        this.popover.closed.connect(this.popover_closed_cb);
     }
 
     public void set_load_state(int state) {
@@ -253,6 +272,26 @@ public class Toolbar: Gtk.Box {
         } else if (this.state == LoadState.FINISHED) {
             this.button_reload.set_image(get_image_from_name("window-close"));
         }
+    }
+
+    private GLib.MenuItem get_item(string name, string? action=null) {
+        GLib.MenuItem item = new GLib.MenuItem(name, null);
+        if (action != null) {
+            item.set_detailed_action(action);
+        }
+        return item;
+    }
+
+    private void show_popover(Gtk.ToggleButton button) {
+        if (this.button_menu.get_active()) {
+            this.popover.show_all();
+        } else {
+            this.popover.hide();
+        }
+    }
+
+    private void popover_closed_cb(Gtk.Popover popover) {
+        this.button_menu.set_active(false);
     }
 }
 
@@ -427,13 +466,16 @@ public class View: Gtk.Box {
     public void open(string uri) {
         switch(uri) {
             case "ontis://history":
+                this.entry.set_text("ontis://history");
                 this.set_current_view(ViewMode.HISTORY);
                 this.tab.set_title("History");
                 this.history_view.update();
                 break;
 
             case "ontis://downloads":
+                this.entry.set_text("ontis://downloads");
                 this.set_current_view(ViewMode.DOWNLOADS);
+                this.tab.set_title("Downloads");
                 this.downloads_view.update();
                 break;
 

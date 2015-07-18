@@ -19,7 +19,60 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-public class Ontis: Gtk.Window {
+public class Ontis: Gtk.Application {
+
+    public Ontis() {
+        Object(application_id: "com.browser.Ontis", flags: GLib.ApplicationFlags.FLAGS_NONE);
+    }
+
+	protected override void activate() {
+	    this.register_session = true;
+	    this.add_actions();
+        this.new_window();
+    }
+
+    public void add_actions() {
+        GLib.SimpleAction action = new GLib.SimpleAction("new-tab", null);
+		action.activate.connect(this.new_tab);
+		this.add_action(action);
+
+        action = new GLib.SimpleAction("new-window", null);
+		action.activate.connect(this.new_window);
+		this.add_action(action);
+
+        action = new GLib.SimpleAction("history", null);
+		action.activate.connect(this.show_history);
+		this.add_action(action);
+
+        action = new GLib.SimpleAction("downloads", null);
+		action.activate.connect(this.show_downloads);
+		this.add_action(action);
+    }
+
+    public OntisWindow get_actual_window() {
+        Gtk.Window win = this.get_active_window();
+        return (OntisWindow)win;
+    }
+
+    public void new_tab(GLib.Variant? variant=null) {
+        this.get_actual_window().notebook.new_page();
+    }
+
+    public void new_window(GLib.Variant? variant=null) {
+        OntisWindow win = new OntisWindow();
+        this.add_window(win);
+    }
+
+    public void show_history(GLib.Variant? variant=null) {
+        this.get_actual_window().notebook.new_page("ontis://history");
+    }
+
+    public void show_downloads(GLib.Variant? variant=null) {
+        this.get_actual_window().notebook.new_page("ontis://downloads");
+    }
+}
+
+public class OntisWindow: Gtk.ApplicationWindow {
 
     //public WebKit.Settings settings;
     public Canvas canvas;
@@ -28,7 +81,7 @@ public class Ontis: Gtk.Window {
 
     public bool full_screen;
 
-    public Ontis() {
+    public OntisWindow() {
         this.set_default_size(400, 280);
         //this.set_decorated(false);
 
@@ -67,7 +120,7 @@ public class Ontis: Gtk.Window {
 
     public void destroy_cb(Gtk.Widget self) {
         // check if exists any download...
-        Gtk.main_quit();
+        //Gtk.main_quit();
     }
 
     public void full_screen_mode(Notebook notebook) {
@@ -120,9 +173,7 @@ public class Ontis: Gtk.Window {
     }
 }
 
-void main(string[] args) {
-    Gtk.init(ref args);
-
-    new Ontis();
-    Gtk.main();
+int main(string[] args) {
+    Ontis ontis = new Ontis();
+    return ontis.run(args);
 }
