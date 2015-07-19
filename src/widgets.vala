@@ -213,11 +213,20 @@ public class Notebook: Gtk.Notebook {
 
 public class Toolbar: Gtk.Box {
 
+    public signal void go_back(int step);
+    public signal void go_forward(int step);
+
     public Gtk.Button button_back;
+    public GLib.Menu back_menu;
+    public Gtk.Popover back_popover;
+
     public Gtk.Button button_forward;
+    public GLib.Menu forward_menu;
+    public Gtk.Popover forward_popover;
+
     public Gtk.Button button_reload;
     public Gtk.Entry entry;
-    public Gtk.Popover popover;
+    public Gtk.Popover menu_popover;
     public Gtk.ToggleButton button_menu;
 
     public int state;
@@ -227,14 +236,24 @@ public class Toolbar: Gtk.Box {
         this.state = LoadState.LOADING;
 
         this.button_back = new Gtk.Button();
+        this.button_back.set_sensitive(false);
         this.button_back.set_image(get_image_from_name("go-previous", 20));
         this.button_back.set_relief(Gtk.ReliefStyle.NONE);
+        this.button_back.button_release_event.connect(this.button_back_released);
         this.pack_start(this.button_back, false, false, 0);
 
+        this.back_menu = new GLib.Menu();
+        this.back_popover = new Gtk.Popover.from_model(this.button_back, this.back_menu);
+
         this.button_forward = new Gtk.Button();
+        this.button_forward.set_sensitive(false);
         this.button_forward.set_image(get_image_from_name("go-next", 20));
         this.button_forward.set_relief(Gtk.ReliefStyle.NONE);
+        this.button_forward.button_release_event.connect(this.button_forward_released);
         this.pack_start(this.button_forward, false, false, 0);
+
+        this.forward_menu = new GLib.Menu();
+        this.forward_popover = new Gtk.Popover.from_model(this.button_forward, this.forward_menu);
 
         this.button_reload = new Gtk.Button();
         this.button_reload.set_image(get_image_from_name("view-refresh", 20));
@@ -248,7 +267,7 @@ public class Toolbar: Gtk.Box {
         this.button_menu = new Gtk.ToggleButton();
         this.button_menu.set_image(get_image_from_name("preferences-system", 20));
         this.button_menu.set_relief(Gtk.ReliefStyle.NONE);
-        this.button_menu.toggled.connect(this.show_popover);
+        this.button_menu.toggled.connect(this.show_menu_popover);
         this.pack_start(this.button_menu, false, false, 0);
 
         GLib.Menu menu = new GLib.Menu();
@@ -268,8 +287,8 @@ public class Toolbar: Gtk.Box {
         menu.append_item(get_item("About Ontis", "app.about"));
         menu.append_item(get_item("Exit", "app.exit"));
 
-        this.popover = new Gtk.Popover.from_model(this.button_menu, menu);
-        this.popover.closed.connect(this.popover_closed_cb);
+        this.menu_popover = new Gtk.Popover.from_model(this.button_menu, menu);
+        this.menu_popover.closed.connect(this.menu_popover_closed_cb);
     }
 
     public void set_load_state(int state) {
@@ -281,36 +300,71 @@ public class Toolbar: Gtk.Box {
         }
     }
 
-    private GLib.MenuItem get_item(string name, string? action=null) {
-        GLib.MenuItem item = new GLib.MenuItem(name, null);
-        if (action != null) {
-            item.set_detailed_action(action);
+    public void set_back_forward_list(WebKit.WebBackForwardList list, bool can_go_back, bool can_go_forward) {
+        this.back_menu.remove_all();
+        this.forward_menu.remove_all();
+
+        int n = 1;
+        foreach (WebKit.WebHistoryItem item in list.get_back_list_with_limit(10)) {
+            this.back_menu.append_item(get_item(item.get_title(), "app.go-back-" + n.to_string()));
+            n++;
         }
+
+        n = 1;
+        foreach (WebKit.WebHistoryItem item in list.get_forward_list_with_limit(10)) {
+            this.forward_menu.append_item(get_item(item.get_title(), "app.go-forward-" + n.to_string()));
+            n++;
+        }
+
+        this.button_back.set_sensitive(can_go_back);
+        this.button_forward.set_sensitive(can_go_forward);
+    }
+
+    private GLib.MenuItem get_item(string name, string action) {
+        GLib.MenuItem item = new GLib.MenuItem(name, action);
         return item;
     }
 
-    private void show_popover(Gtk.ToggleButton button) {
+    private void show_menu_popover(Gtk.ToggleButton button) {
         if (this.button_menu.get_active()) {
-            this.popover.show_all();
+            this.menu_popover.show_all();
         } else {
-            this.popover.hide();
+            this.menu_popover.hide();
         }
     }
 
-    private void popover_closed_cb(Gtk.Popover popover) {
+    private void menu_popover_closed_cb(Gtk.Popover popover) {
         this.button_menu.set_active(false);
+    }
+
+    private bool button_back_released(Gtk.Widget widget, Gdk.EventButton event) {
+        if (event.button == 1) {
+            this.go_back(1);
+        } else if (event.button == 3) {
+            try {this.back_popover.show_all();} finally {};
+        }
+
+        return false;
+    }
+
+    private bool button_forward_released(Gtk.Widget widget, Gdk.EventButton event) {
+        if (event.button == 1) {
+            this.go_forward(1);
+        } else if (event.button == 3) {
+            try {this.forward_popover.show_all();} finally {};
+        }
+
+        return false;
     }
 }
 
 public class View: Gtk.Box {
 
     public signal void icon_loaded(Gdk.Pixbuf? pixbuf);
-    public signal void new_download(WebKit.Download download); // pixbuf;
+    public signal void new_download(WebKit.Download download);
 
     public Toolbar toolbar;
     public DownPanel down_panel;
-    public Gtk.Button button_back;
-    public Gtk.Button button_forward;
     public Gtk.Button button_reload;
     public Gtk.Entry entry;
     public NotebookTab tab;
@@ -334,13 +388,9 @@ public class View: Gtk.Box {
         this.cache = new Cache();
 
         this.toolbar = new Toolbar();
+        this.toolbar.go_back.connect(this.back);
+        this.toolbar.go_forward.connect(this.forward);
         this.pack_start(this.toolbar, false, false, 0);
-
-        this.button_back = this.toolbar.button_back;
-        this.button_back.clicked.connect(this.back);
-
-        this.button_forward = this.toolbar.button_forward;
-        this.button_forward.clicked.connect(this.forward);
 
         this.button_reload = this.toolbar.button_reload;
         this.button_reload.clicked.connect(this.reload_stop);
@@ -448,8 +498,7 @@ public class View: Gtk.Box {
 
     public void load_committed_cb(WebKit.WebView view, WebKit.WebFrame frame) {
         this.entry.set_text(this.view.get_uri());
-        this.button_back.set_sensitive(this.view.can_go_back());
-        this.button_forward.set_sensitive(this.view.can_go_forward());
+        this.toolbar.set_back_forward_list(this.view.get_back_forward_list(), this.view.can_go_back(), this.view.can_go_forward());
     }
 
     public bool mime_type_policy_decision_requested_cb(WebKit.WebView view, WebKit.WebFrame frame,
@@ -530,15 +579,15 @@ public class View: Gtk.Box {
         this.show_all();
     }
 
-    public void back(Gtk.Button? button=null) {
+    public void back(Toolbar toolbar, int step=1) {
         if (this.view.can_go_back()) {
-            this.view.go_back();
+            this.view.go_back(); // FIXME: need go back the needed steps
         }
     }
 
-    public void forward(Gtk.Button? button=null) {
+    public void forward(Toolbar toolbar, int step=1) {
         if (this.view.can_go_forward()) {
-            this.view.go_forward();
+            this.view.go_forward();  // FIXME: need go forward the needed steps
         }
     }
 

@@ -52,6 +52,18 @@ public class Ontis: Gtk.Application {
 		action.activate.connect(this.close_all);
 		this.add_action(action);
 
+        for (int i=1; i<=10; i++) {
+            action = new GLib.SimpleAction("go-back-" + i.to_string(), null);
+            action.activate.connect(this.go_back);
+            this.add_action(action);
+        }
+
+        for (int i=1; i<=10; i++) {
+            action = new GLib.SimpleAction("go-forward-" + i.to_string(), null);
+            action.activate.connect(this.go_forward);
+            this.add_action(action);
+        }
+
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.t, Gdk.ModifierType.CONTROL_MASK), "app.new-tab", null);
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.n, Gdk.ModifierType.CONTROL_MASK), "app.new-window", null);
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.h, Gdk.ModifierType.CONTROL_MASK), "app.history", null);
@@ -90,6 +102,16 @@ public class Ontis: Gtk.Application {
         }
 
         this.get_actual_window().destroy();
+    }
+
+    public void go_back(GLib.SimpleAction action, GLib.Variant? variant) {
+        int step = (int)(action.get_name().split("-")[-1]);
+        this.get_actual_window().get_actual_view().view.go_back_or_forward(step * -1);
+    }
+
+    public void go_forward(GLib.SimpleAction action, GLib.Variant? variant) {
+        int step = (int)(action.get_name().split("-")[-1]);
+        this.get_actual_window().get_actual_view().view.go_back_or_forward(step);
     }
 }
 
@@ -191,6 +213,27 @@ public class OntisWindow: Gtk.ApplicationWindow {
 
     public void close_now() {
         this.destroy();
+    }
+
+    public View get_actual_view() {
+        GLib.List<Gtk.Widget> list = this.notebook.get_children();
+        View? view = null;
+
+        int i = 0;
+        foreach (Gtk.Widget widget in list) {
+            if (i == this.notebook.get_current_page()) {
+                view = (View)widget;
+                break;
+            }
+
+            i++;
+        }
+
+        if (view == null) {
+            view = new View(this.download_manager); // this will never happen
+        }
+
+        return view;
     }
 }
 
