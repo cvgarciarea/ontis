@@ -47,6 +47,15 @@ public class Ontis: Gtk.Application {
         action = new GLib.SimpleAction("downloads", null);
 		action.activate.connect(this.show_downloads);
 		this.add_action(action);
+
+        action = new GLib.SimpleAction("exit", null);
+		action.activate.connect(this.close_all);
+		this.add_action(action);
+
+        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.t, Gdk.ModifierType.CONTROL_MASK), "app.new-tab", null);
+        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.n, Gdk.ModifierType.CONTROL_MASK), "app.new-window", null);
+        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.h, Gdk.ModifierType.CONTROL_MASK), "app.history", null);
+        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.d, Gdk.ModifierType.CONTROL_MASK), "app.downloads", null);
     }
 
     public OntisWindow get_actual_window() {
@@ -69,6 +78,18 @@ public class Ontis: Gtk.Application {
 
     public void show_downloads(GLib.Variant? variant=null) {
         this.get_actual_window().notebook.new_page("ontis://downloads");
+    }
+
+    public void close_all(GLib.Variant? variant=null) {
+        foreach (Gtk.Window window in this.get_windows()) {
+            OntisWindow owindow = (OntisWindow)window;
+
+            if (owindow != this.get_actual_window()) {
+                owindow.destroy();
+            }
+        }
+
+        this.get_actual_window().destroy();
     }
 }
 

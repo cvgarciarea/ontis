@@ -260,6 +260,13 @@ public class Toolbar: Gtk.Box {
         menu.append_item(get_item("Downloads", "app.downloads"));
         menu.append_item(get_item("Recent tabs", "app.recent-tabs"));
         menu.append_item(get_item("Favorites", "app.favorites"));
+        // separator
+        menu.append_item(get_item("Print", "app.print"));
+        menu.append_item(get_item("Save page as", "app.download-page"));
+        menu.append_item(get_item("Find", "app.find"));
+        menu.append_item(get_item("Settings", "app.settings"));
+        menu.append_item(get_item("About Ontis", "app.about"));
+        menu.append_item(get_item("Exit", "app.exit"));
 
         this.popover = new Gtk.Popover.from_model(this.button_menu, menu);
         this.popover.closed.connect(this.popover_closed_cb);
