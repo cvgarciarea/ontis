@@ -8,10 +8,10 @@ A lightweight browser written in Vala + WebKit 3.0
 
 For run this:
 First compile with:
-    make
+```make```
 
 And after run with:
-    ./ontis
+```./ontis```
 
 *Dependencies:*
 
