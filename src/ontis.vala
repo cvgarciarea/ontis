@@ -84,11 +84,11 @@ public class App: Gtk.Application {
 
     public Ontis.Window get_actual_window() {
         Gtk.Window win = this.get_active_window();
-        return (Ontis.Window)win;
+        return (win as Ontis.Window);
     }
 
     public void new_tab(GLib.Variant? variant=null) {
-        //this.get_actual_window().notebook.new_page();
+        this.get_actual_window().new_page();
     }
 
     public void new_window(GLib.Variant? variant=null) {
@@ -97,11 +97,11 @@ public class App: Gtk.Application {
     }
 
     public void show_history(GLib.Variant? variant=null) {
-        //this.get_actual_window().notebook.new_page("ontis://history");
+        this.get_actual_window().new_page("ontis://history");
     }
 
     public void show_downloads(GLib.Variant? variant=null) {
-        //this.get_actual_window().notebook.new_page("ontis://downloads");
+        this.get_actual_window().new_page("ontis://downloads");
     }
 
     public void close_all(GLib.Variant? variant=null) {

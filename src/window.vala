@@ -31,7 +31,7 @@ namespace Ontis {
         public bool full_screen;
 
         public Window() {
-            this.set_default_size(400, 280);
+            this.set_default_size(620, 420);
 
             this.canvas = new Ontis.Canvas();
             this.add(this.canvas);
@@ -45,6 +45,7 @@ namespace Ontis {
             this.notebook.minimize.connect(this.minimize_cb);
             this.notebook.turn_maxmizie.connect(this.turn_maximize_cb);
             this.notebook.close.connect(() => { this.destroy(); });
+            this.notebook.page_removed.connect(this.page_removed_cb);
             this.canvas.pack_start(this.notebook, true, true, 0);
 
             this.set_titlebar(this.notebook.switcher);
@@ -83,6 +84,12 @@ namespace Ontis {
             }
         }
 
+        private void page_removed_cb(Ontis.Notebook notebook) {
+            if (this.notebook.n_pages == 0) {
+                this.destroy();
+            }
+        }
+
         public void full_screen_mode(Ontis.Notebook notebook) {
             this.change_full_screen();
         }
@@ -99,9 +106,9 @@ namespace Ontis {
         }
 
         public bool motion_event_cb(Gtk.Widget self, Gdk.EventMotion event) {
-            Gtk.Allocation a1;
-            Gtk.Allocation a2;
-            int? max_height = null;
+            //Gtk.Allocation a1;
+            //Gtk.Allocation a2;
+            //int? max_height = null;
             /*
             foreach (Gtk.Widget widget in this.notebook.get_children()) {
                 if (max_height != null) {

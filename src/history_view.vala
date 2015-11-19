@@ -61,6 +61,7 @@ namespace Ontis {
                 hbox.pack_start(cbutton, false, false, 0);
 
                 Gtk.LinkButton lbutton = new Gtk.LinkButton.with_label(url, name + " " + url);
+                lbutton.set_visited(false);
                 lbutton.activate_link.connect(this.open_link);
                 hbox.pack_start(lbutton, false, false, 0);
             }

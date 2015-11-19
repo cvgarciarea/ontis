@@ -13,7 +13,7 @@ namespace Ontis {
         public Gtk.Box hbox;
         public Gtk.ScrolledWindow scroll;
         public WebKit.WebView view;
-        public HistoryView history_view;
+        public Ontis.HistoryView history_view;
         public Ontis.DownloadsView downloads_view;
         public Ontis.Cache cache;
         public Ontis.DownloadManager download_manager;
@@ -25,8 +25,11 @@ namespace Ontis {
 
             this.actual_view = ViewMode.WEB;
             this.download_manager = download_manager;
+
             this.history_view = new Ontis.HistoryView();
-            this.downloads_view = new DownloadsView(this.download_manager);
+            this.history_view.open_url.connect((url) => { this.open(url); });
+
+            this.downloads_view = new Ontis.DownloadsView(this.download_manager);
             this.cache = new Ontis.Cache();
 
             this.toolbar = new Ontis.Toolbar();
