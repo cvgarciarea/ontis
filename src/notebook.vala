@@ -325,6 +325,14 @@ namespace Ontis {
                 }
             }
 
+            if (this.current_page >= this.current_page) {
+                this.set_current_page(this.current_page - 1);
+            }
+
+            if (this.current_page == -1) {
+                this.set_current_page(0);
+            }
+
             this.page_removed();
         }
 

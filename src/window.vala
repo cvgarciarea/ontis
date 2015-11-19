@@ -88,10 +88,6 @@ namespace Ontis {
             if (this.notebook.n_pages == 0) {
                 this.destroy();
             }
-
-            if (this.notebook.current_page >= this.notebook.current_page) {
-                this.notebook.set_current_page(this.notebook.current_page - 1);
-            }
         }
 
         public void full_screen_mode(Ontis.Notebook notebook) {
