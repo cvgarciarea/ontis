@@ -144,28 +144,21 @@ namespace Ontis {
             this.destroy();
         }
 
-        public View? get_actual_view() {
-            /*
-            GLib.List<Gtk.Widget> list = this.notebook.get_children();
-            View? view = null;
+        public Ontis.View get_current_view() {
+            Ontis.View view = null;
 
-            int i = 0;
-            foreach (Gtk.Widget widget in list) {
-                if (i == this.notebook.get_current_page()) {
-                    view = (View)widget;
+            int current = 0;
+            int page = this.notebook.current_page;
+            foreach (Gtk.Widget widget in this.notebook.childs) {
+                if (current == page) {
+                    view = (widget as Ontis.View);
                     break;
                 }
 
-                i++;
-            }
-
-            if (view == null) {
-                view = new View(this.download_manager); // this will never happen
+                current ++;
             }
 
             return view;
-            */
-           return null;
         }
 
         public void new_page(string? url="google.com") {
@@ -218,6 +211,44 @@ namespace Ontis {
 
         private void new_download_cb(WebKit.Download download) {
             this.download_manager.add_download(download);
+        }
+
+        public void show_history() {
+            if (this.get_current_view().get_mode() == ViewMode.HISTORY) {
+                return;
+            }
+
+            int current = 0;
+            foreach (Gtk.Widget widget in this.notebook.childs) {
+                Ontis.View view = (widget as Ontis.View);
+                if (view.get_mode() == ViewMode.HISTORY) {
+                    this.notebook.set_current_page(current);
+                    return;
+                }
+
+                current ++;
+            }
+
+            this.new_page("ontis://history");
+        }
+
+        public void show_downloads() {
+            if (this.get_current_view().get_mode() == ViewMode.DOWNLOADS) {
+                return;
+            }
+
+            int current = 0;
+            foreach (Gtk.Widget widget in this.notebook.childs) {
+                Ontis.View view = (widget as Ontis.View);
+                if (view.get_mode() == ViewMode.DOWNLOADS) {
+                    this.notebook.set_current_page(current);
+                    return;
+                }
+
+                current ++;
+            }
+
+            this.new_page("ontis://downloads");
         }
     }
 }

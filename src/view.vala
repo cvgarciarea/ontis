@@ -1,3 +1,21 @@
+/*
+Copyright (C) 2015, Cristian García <cristian99garcia@gmail.com>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+*/
+
 namespace Ontis {
 
     public class View: Gtk.Box {
@@ -18,12 +36,12 @@ namespace Ontis {
         public Ontis.Cache cache;
         public Ontis.DownloadManager download_manager;
 
-        public int actual_view;
+        public int mode;
 
         public View(Ontis.DownloadManager download_manager) {
             this.set_orientation(Gtk.Orientation.VERTICAL);
 
-            this.actual_view = ViewMode.WEB;
+            this.mode = ViewMode.WEB;
             this.download_manager = download_manager;
 
             this.history_view = new Ontis.HistoryView();
@@ -188,11 +206,11 @@ namespace Ontis {
         }
 
         public void set_current_view(int view) {
-            if (this.actual_view == view) {
+            if (this.get_mode() == view) {
                 return;
             }
 
-            switch(this.actual_view) {
+            switch(this.get_mode()) {
                 case ViewMode.WEB:
                     this.remove(this.scroll);
                     break;
@@ -206,8 +224,8 @@ namespace Ontis {
                     break;
             }
 
-            this.actual_view = view;
-            switch(this.actual_view) {
+            this.mode = view;
+            switch(this.get_mode()) {
                 case ViewMode.WEB:
                     this.pack_start(this.scroll, true, true, 0);
                     break;
@@ -254,6 +272,10 @@ namespace Ontis {
 
         public void set_tab(Ontis.NotebookTab tab) {
             this.tab = tab;
+        }
+
+        public int get_mode() {
+            return this.mode;
         }
 
         public void zoom_level_changed_cb(Ontis.DownPanel down_panel, int zoom) {

@@ -97,11 +97,11 @@ public class App: Gtk.Application {
     }
 
     public void show_history(GLib.Variant? variant=null) {
-        this.get_actual_window().new_page("ontis://history");
+        this.get_actual_window().show_history();
     }
 
     public void show_downloads(GLib.Variant? variant=null) {
-        this.get_actual_window().new_page("ontis://downloads");
+        this.get_actual_window().show_downloads();
     }
 
     public void close_all(GLib.Variant? variant=null) {
@@ -118,12 +118,12 @@ public class App: Gtk.Application {
 
     public void go_back(GLib.SimpleAction action, GLib.Variant? variant) {
         int step = (int)(action.get_name().split("-")[-1]);
-        this.get_actual_window().get_actual_view().view.go_back_or_forward(step * -1);
+        this.get_actual_window().get_current_view().view.go_back_or_forward(step * -1);
     }
 
     public void go_forward(GLib.SimpleAction action, GLib.Variant? variant) {
         int step = (int)(action.get_name().split("-")[-1]);
-        this.get_actual_window().get_actual_view().view.go_back_or_forward(step);
+        this.get_actual_window().get_current_view().view.go_back_or_forward(step);
     }
 }
 
