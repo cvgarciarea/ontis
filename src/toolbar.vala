@@ -40,11 +40,11 @@ namespace Ontis {
 
         public Toolbar() {
             this.set_orientation(Gtk.Orientation.HORIZONTAL);
-            this.state = LoadState.LOADING;
+            this.state = Utils.LoadState.LOADING;
 
             this.button_back = new Gtk.Button();
             this.button_back.set_sensitive(false);
-            this.button_back.set_image(get_image_from_name("go-previous", 20));
+            this.button_back.set_image(Utils.get_image_from_name("go-previous", 20));
             this.button_back.set_relief(Gtk.ReliefStyle.NONE);
             this.button_back.button_release_event.connect(this.button_back_released);
             this.pack_start(this.button_back, false, false, 0);
@@ -54,7 +54,7 @@ namespace Ontis {
 
             this.button_forward = new Gtk.Button();
             this.button_forward.set_sensitive(false);
-            this.button_forward.set_image(get_image_from_name("go-next", 20));
+            this.button_forward.set_image(Utils.get_image_from_name("go-next", 20));
             this.button_forward.set_relief(Gtk.ReliefStyle.NONE);
             this.button_forward.button_release_event.connect(this.button_forward_released);
             this.pack_start(this.button_forward, false, false, 0);
@@ -63,7 +63,7 @@ namespace Ontis {
             this.forward_popover = new Gtk.Popover.from_model(this.button_forward, this.forward_menu);
 
             this.button_reload = new Gtk.Button();
-            this.button_reload.set_image(get_image_from_name("view-refresh", 20));
+            this.button_reload.set_image(Utils.get_image_from_name("view-refresh", 20));
             this.button_reload.set_relief(Gtk.ReliefStyle.NONE);
             this.pack_start(this.button_reload, false, false, 0);
 
@@ -72,7 +72,7 @@ namespace Ontis {
             this.pack_start(this.entry, true, true, 0);
 
             this.button_menu = new Gtk.ToggleButton();
-            this.button_menu.set_image(get_image_from_name("preferences-system", 20));
+            this.button_menu.set_image(Utils.get_image_from_name("preferences-system", 20));
             this.button_menu.set_relief(Gtk.ReliefStyle.NONE);
             this.button_menu.toggled.connect(this.show_menu_popover);
             this.pack_start(this.button_menu, false, false, 0);
@@ -87,6 +87,7 @@ namespace Ontis {
             menu.append_item(get_item("Recent tabs", "app.recent-tabs"));
             menu.append_item(get_item("Favorites", "app.favorites"));
             // separator
+            menu.append_item(get_item("Search", "app.search"));
             menu.append_item(get_item("Print", "app.print"));
             menu.append_item(get_item("Save page as", "app.download-page"));
             menu.append_item(get_item("Find", "app.find"));
@@ -100,10 +101,10 @@ namespace Ontis {
 
         public void set_load_state(int state) {
             this.state = state;
-            if (this.state == LoadState.LOADING) {
-                this.button_reload.set_image(get_image_from_name("view-refresh"));
-            } else if (this.state == LoadState.FINISHED) {
-                this.button_reload.set_image(get_image_from_name("window-close"));
+            if (this.state == Utils.LoadState.LOADING) {
+                this.button_reload.set_image(Utils.get_image_from_name("view-refresh"));
+            } else if (this.state == Utils.LoadState.FINISHED) {
+                this.button_reload.set_image(Utils.get_image_from_name("window-close"));
             }
         }
 

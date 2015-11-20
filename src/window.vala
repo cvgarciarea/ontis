@@ -32,6 +32,8 @@ namespace Ontis {
 
         public Window() {
             this.set_default_size(620, 420);
+            //this.set_app_paintable(true);
+            //this.set_visual(screen.get_rgba_visual());
 
             this.canvas = new Ontis.Canvas();
             this.add(this.canvas);
@@ -51,7 +53,6 @@ namespace Ontis {
             this.set_titlebar(this.notebook.switcher);
 
             this.key_release_event.connect(this.key_release_event_cb);
-            this.motion_notify_event.connect(this.motion_event_cb);
             this.new_page();
             this.show_all();
         }
@@ -103,37 +104,6 @@ namespace Ontis {
             } else {
                 this.unfullscreen();
             }
-        }
-
-        public bool motion_event_cb(Gtk.Widget self, Gdk.EventMotion event) {
-            //Gtk.Allocation a1;
-            //Gtk.Allocation a2;
-            //int? max_height = null;
-            /*
-            foreach (Gtk.Widget widget in this.notebook.get_children()) {
-                if (max_height != null) {
-                    break;
-                }
-
-                View view = (View)widget;
-
-                widget = this.notebook.get_tab_label(view);
-                NotebookTab tab = (NotebookTab)widget;
-
-                view.toolbar.get_allocation(out a1);
-                tab.get_allocation(out a2);
-
-                max_height = a1.height + a2.height + 10;
-            }
-
-            if (this.full_screen && event.y == 0) {
-                this.notebook.set_topbar_visible(true);
-            } else if (this.full_screen && event.y > max_height && this.notebook.get_show_tabs()) {
-                this.notebook.set_topbar_visible(false);
-            }
-            */
-
-            return false;
         }
 
         public void close_now() {
@@ -209,15 +179,32 @@ namespace Ontis {
             this.download_manager.add_download(download);
         }
 
-        public void show_history() {
-            if (this.get_current_view().get_mode() == ViewMode.HISTORY) {
+        private void show_special_page(Utils.ViewMode mode) {
+            if (this.get_current_view().get_mode() == mode) {
                 return;
             }
+
+            string url = "";
+
+            switch (mode) {
+                case Utils.ViewMode.HISTORY:
+                    url = Utils.URL_HISTORY;
+                    break;
+
+                case Utils.ViewMode.DOWNLOADS:
+                    url = Utils.URL_DOWNLOADS;
+                    break;
+
+                case Utils.ViewMode.CONFIG:
+                    url = Utils.URL_CONFIG;
+                    break;
+            }
+
 
             int current = 0;
             foreach (Gtk.Widget widget in this.notebook.childs) {
                 Ontis.View view = (widget as Ontis.View);
-                if (view.get_mode() == ViewMode.HISTORY) {
+                if (view.get_mode() == mode) {
                     this.notebook.set_current_page(current);
                     return;
                 }
@@ -225,26 +212,19 @@ namespace Ontis {
                 current ++;
             }
 
-            this.new_page("ontis://history");
+            this.new_page(url);
+        }
+
+        public void show_history() {
+            this.show_special_page(Utils.ViewMode.HISTORY);
         }
 
         public void show_downloads() {
-            if (this.get_current_view().get_mode() == ViewMode.DOWNLOADS) {
-                return;
-            }
+            this.show_special_page(Utils.ViewMode.DOWNLOADS);
+        }
 
-            int current = 0;
-            foreach (Gtk.Widget widget in this.notebook.childs) {
-                Ontis.View view = (widget as Ontis.View);
-                if (view.get_mode() == ViewMode.DOWNLOADS) {
-                    this.notebook.set_current_page(current);
-                    return;
-                }
-
-                current ++;
-            }
-
-            this.new_page("ontis://downloads");
+        public void show_settings() {
+            this.show_special_page(Utils.ViewMode.CONFIG);
         }
     }
 }

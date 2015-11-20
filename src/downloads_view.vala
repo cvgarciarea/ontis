@@ -1,6 +1,6 @@
 namespace Ontis {
 
-    public class DownloadsView: Gtk.Box {
+    public class DownloadsView: Ontis.BaseView {
 
         public DownloadManager download_manager;
         public Gtk.ListBox listbox;
@@ -16,9 +16,11 @@ namespace Ontis {
 
             this.listbox = new Gtk.ListBox();
             scroll.add(this.listbox);
+
+            this.update.connect(this.update_cb);
         }
 
-        public void update() {
+        public void update_cb() {
         }
 
         private void new_download_cb(DownloadManager dm, Download download) {
@@ -29,7 +31,7 @@ namespace Ontis {
             hbox.set_border_width(10);
             row.add(hbox);
 
-            hbox.pack_start(get_image_from_name("text-x-generic", 48), false, false, 0);
+            hbox.pack_start(Utils.get_image_from_name("text-x-generic", 48), false, false, 0);
 
             Gtk.Box vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
             hbox.pack_start(vbox, true, true, 0);
@@ -45,7 +47,7 @@ namespace Ontis {
             Gtk.Label label = new Gtk.Label(download.get_filename());
             vbox.pack_start(label, false, false, 0);
 
-            hbox.pack_end(get_image_from_name("window-close"), false, false, 0);
+            hbox.pack_end(Utils.get_image_from_name("window-close"), false, false, 0);
 
             this.show_all();
 

@@ -60,6 +60,14 @@ public class App: Gtk.Application {
 		action.activate.connect(this.show_downloads);
 		this.add_action(action);
 
+        action = new GLib.SimpleAction("search", null);
+		action.activate.connect(this.turn_search_bar);
+		this.add_action(action);
+
+        action = new GLib.SimpleAction("settings", null);
+		action.activate.connect(this.show_settings);
+		this.add_action(action);
+
         action = new GLib.SimpleAction("exit", null);
 		action.activate.connect(this.close_all);
 		this.add_action(action);
@@ -80,15 +88,16 @@ public class App: Gtk.Application {
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.n, Gdk.ModifierType.CONTROL_MASK), "app.new-window", null);
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.h, Gdk.ModifierType.CONTROL_MASK), "app.history", null);
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.d, Gdk.ModifierType.CONTROL_MASK), "app.downloads", null);
+        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.f, Gdk.ModifierType.CONTROL_MASK), "app.search", null);
     }
 
-    public Ontis.Window get_actual_window() {
+    public Ontis.Window get_current_window() {
         Gtk.Window win = this.get_active_window();
         return (win as Ontis.Window);
     }
 
     public void new_tab(GLib.Variant? variant=null) {
-        this.get_actual_window().new_page();
+        this.get_current_window().new_page();
     }
 
     public void new_window(GLib.Variant? variant=null) {
@@ -97,33 +106,63 @@ public class App: Gtk.Application {
     }
 
     public void show_history(GLib.Variant? variant=null) {
-        this.get_actual_window().show_history();
+        this.get_current_window().show_history();
     }
 
     public void show_downloads(GLib.Variant? variant=null) {
-        this.get_actual_window().show_downloads();
+        this.get_current_window().show_downloads();
+    }
+
+    public void turn_search_bar(GLib.Variant? variant=null) {
+        Ontis.BaseView view;
+        Ontis.Window window = this.get_current_window();
+        Ontis.View current_view = window.get_current_view();
+
+        switch (current_view.mode) {
+            case Utils.ViewMode.WEB:
+                view = current_view.web_view;
+                break;
+
+            case Utils.ViewMode.HISTORY:
+                view = current_view.history_view;
+                break;
+
+            case Utils.ViewMode.DOWNLOADS:
+                view = current_view.downloads_view;
+                break;
+
+            default:  // Never happen
+                view = current_view.history_view;
+                break;
+        }
+
+        view.turn_show_search_bar();
+    }
+
+    public void show_settings(GLib.Variant? variant=null) {
+        this.get_current_window().show_settings();
     }
 
     public void close_all(GLib.Variant? variant=null) {
         foreach (Gtk.Window window in this.get_windows()) {
             Ontis.Window owindow = (Ontis.Window)window;
 
-            if (owindow != this.get_actual_window()) {
+            if (owindow != this.get_current_window()) {
                 owindow.destroy();
             }
         }
 
-        this.get_actual_window().destroy();
+        this.get_current_window().destroy();
     }
 
     public void go_back(GLib.SimpleAction action, GLib.Variant? variant) {
         int step = (int)(action.get_name().split("-")[-1]);
-        this.get_actual_window().get_current_view().view.go_back_or_forward(step * -1);
+        this.get_current_window().get_current_view().web_view.view.go_back_or_forward(step * -1);
     }
 
     public void go_forward(GLib.SimpleAction action, GLib.Variant? variant) {
         int step = (int)(action.get_name().split("-")[-1]);
-        this.get_actual_window().get_current_view().view.go_back_or_forward(step);
+        this.get_current_window().get_current_view().web_view.view.go_back_or_forward(step);
     }
 }
 

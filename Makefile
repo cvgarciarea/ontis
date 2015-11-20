@@ -14,9 +14,12 @@ SRC = src/cache.vala \
       src/view.vala \
       src/canvas.vala \
       src/downloads_view.vala \
-      src/globals.vala \
+      src/web_view.vala \
+      src/utils.vala \
       src/notebook.vala \
       src/toolbar.vala \
+      src/config_view.vala \
+      src/base_view.vala \
       src/window.vala
 
 BIN = ontis

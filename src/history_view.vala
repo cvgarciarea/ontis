@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 namespace Ontis {
 
-    public class HistoryView: Gtk.ScrolledWindow {
+    public class HistoryView: Ontis.BaseView {
 
         public signal void open_url(string url);
 
@@ -27,15 +27,19 @@ namespace Ontis {
         public HistoryView() {
             this.listbox = new Gtk.ListBox();
             this.listbox.set_selection_mode(Gtk.SelectionMode.NONE);
-            this.add(this.listbox);
+            this.scroll.add(this.listbox);
+
+            this.update.connect(this.update_cb);
         }
 
-        public void update(string search="") {
+        public void update_cb() { //string search="") {
+            string search = "";
+
             foreach (Gtk.Widget lrow in this.listbox.get_children()) {
                 this.listbox.remove(lrow);
             }
 
-            Json.Array history = get_history();
+            Json.Array history = Utils.get_history();
             GLib.List<unowned Json.Node> elements = history.get_elements();
             elements.reverse();
 
