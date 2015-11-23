@@ -30,10 +30,15 @@ namespace Ontis {
             this.scroll.add(this.listbox);
 
             this.update.connect(this.update_cb);
+            this.search_entry.changed.connect(this.update_cb);
         }
 
-        public void update_cb() { //string search="") {
-            string search = "";
+        public void update_cb(GLib.Object widget) {
+            GLib.Idle.add(() => { this.update2(); return false; });
+        }
+
+        public void update2() { //string search="") {
+            string search = this.search_entry.get_text().down();
 
             foreach (Gtk.Widget lrow in this.listbox.get_children()) {
                 this.listbox.remove(lrow);
@@ -43,15 +48,25 @@ namespace Ontis {
             GLib.List<unowned Json.Node> elements = history.get_elements();
             elements.reverse();
 
-            foreach (Json.Node node in elements) {
-                string data = node.dup_string();
-                string date = data.split(" ")[0];
-                string time = data.split(" ")[1];
-                string name = data.split(" ")[2];
-                string url = data.split(" ")[3];
+            int current = 0;
 
-                if (search != "" || (!(search in name) && !(search in url))) {
-                    continue;
+            foreach (Json.Node node in elements) {
+                if (current > this.max) {
+                    break;
+                }
+
+                current ++;
+
+                string data = node.dup_string();
+                string date = data.split(" ")[0].down();
+                string time = data.split(" ")[1].down();
+                string name = data.split(" ")[2].down();
+                string url = data.split(" ")[3].down();
+
+                if (search != "") {
+                    if (!(search in name) || !(search in url)) {
+                        continue;
+                    }
                 }
 
                 Gtk.ListBoxRow row = new Gtk.ListBoxRow();

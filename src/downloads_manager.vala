@@ -1,7 +1,4 @@
 /*
-Compile with:
-    valac --pkg gtk+-3.0 notebook.vala
-
 Copyright (C) 2015, Cristian García <cristian99garcia@gmail.com>
 
 This program is free software; you can redistribute it and/or modify

@@ -22,6 +22,8 @@ namespace Ontis {
 
         public signal void update();
 
+        public int max = 50;
+
         public Gtk.SearchBar search_bar;
         public Gtk.SearchEntry search_entry;
         public Gtk.ScrolledWindow scroll;
