@@ -131,6 +131,10 @@ public class App: Gtk.Application {
                 view = current_view.downloads_view;
                 break;
 
+            case Utils.ViewMode.CONFIG:
+                view = current_view.config_view;
+                break;
+
             default:  // Never happen
                 view = current_view.history_view;
                 break;

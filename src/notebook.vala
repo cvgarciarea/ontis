@@ -105,8 +105,7 @@ namespace Ontis {
         public double[] tab_label_color = { 0.9215686274509803, 0.9372549019607843, 0.9490196078431372 };
         public double[] tab_selected_label_color = { 0.0, 0.0, 0.0 };
 
-        public double[] tab_bg_close_button = { 0.3764705882352941, 0.49019607843137253, 0.5450980392156862 };
-        public double[] tab_bg_close_button2 = { 0.5568627450980392, 0.6352941176470588, 0.6784313725490196 };
+        public double[] tab_bg_close_button = { 0.5568627450980392, 0.6352941176470588, 0.6784313725490196 };
         public double[] tab_mouse_in_bg_close_button = { 0.9176470588235294, 0.592156862745098, 0.5568627450980392 };
 
         public double[] button_bg_color = { 0.3764705882352941, 0.49019607843137253, 0.5450980392156862 };
@@ -513,7 +512,7 @@ namespace Ontis {
                 if (tab.mouse_in_close_button) {
                     context.set_source_rgb(this.tab_mouse_in_bg_close_button[0], this.tab_mouse_in_bg_close_button[1], this.tab_mouse_in_bg_close_button[2]);
                 } else {
-                    context.set_source_rgb(this.tab_bg_close_button2[0], this.tab_bg_close_button2[1], this.tab_bg_close_button2[2]);
+                    context.set_source_rgb(this.tab_bg_close_button[0], this.tab_bg_close_button[1], this.tab_bg_close_button[2]);
                 }
 
                 context.arc(max_width * (current + 1) - 20, height / 2, 8, 0, 2 * Math.PI);

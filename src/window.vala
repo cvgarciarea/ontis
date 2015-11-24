@@ -49,25 +49,8 @@ namespace Ontis {
 
             this.set_titlebar(this.notebook.switcher);
 
-            this.key_release_event.connect(this.key_release_event_cb);
             this.new_page();
             this.show_all();
-        }
-
-        private bool key_release_event_cb(Gtk.Widget self, Gdk.EventKey event) {
-            switch(event.keyval) {
-                case 65480:  // F11
-                    this.change_full_screen();
-                    break;
-
-                case 65307:  // Scape
-                    if (this.full_screen) {
-                        this.change_full_screen();
-                    }
-                    break;
-            }
-
-            return false;
         }
 
         private void minimize_cb(Ontis.Notebook notebook) {
@@ -125,7 +108,7 @@ namespace Ontis {
         }
 
         public void new_page(string? url="google.com") {
-            Ontis.View view = new Ontis.View(this.download_manager);
+            Ontis.View view = new Ontis.View(this.notebook, this.download_manager);
             view.set_vexpand(true);
             //view.icon_loaded.connect(this.icon_loaded_cb);
             //view.new_download.connect(this.new_download_cb);

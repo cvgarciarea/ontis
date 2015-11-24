@@ -36,30 +36,16 @@ namespace Ontis {
 
         public Utils.ViewMode mode;
 
-        public View(Ontis.DownloadManager download_manager) {
+        public View(Ontis.Notebook notebook, Ontis.DownloadManager download_manager) {
             this.set_orientation(Gtk.Orientation.VERTICAL);
 
             this.mode = Utils.ViewMode.WEB;
             this.download_manager = download_manager;
 
-            this.history_view = new Ontis.HistoryView();
-            this.history_view.open_url.connect((url) => { this.open(url); });
-
-            this.downloads_view = new Ontis.DownloadsView(this.download_manager);
-            this.config_view = new Ontis.ConfigView();
-
             this.toolbar = new Ontis.Toolbar();
             this.toolbar.go_back.connect(this.back);
             this.toolbar.go_forward.connect(this.forward);
             this.pack_start(this.toolbar, false, false, 0);
-
-            this.web_view = new Ontis.WebView();
-            this.web_view.title_changed.connect(this.title_changed_cb);
-            this.web_view.icon_loaded.connect((pixbuf) => { this.icon_loaded(pixbuf); });
-            this.web_view.new_download.connect((download) => { this.new_download(download); });
-            this.web_view.load_state_changed.connect((state) => this.toolbar.set_load_state(state));
-            this.web_view.uri_changed.connect(this.uri_changed_cb);
-            this.pack_start(this.web_view, true, true, 0);
 
             this.button_reload = this.toolbar.button_reload;
             this.button_reload.clicked.connect(this.reload_stop);
@@ -68,6 +54,20 @@ namespace Ontis {
             this.entry.activate.connect(() => {
                 this.open(this.entry.get_text());
             });
+
+            this.history_view = new Ontis.HistoryView();
+            this.history_view.open_url.connect((url) => { this.open(url); });
+
+            this.downloads_view = new Ontis.DownloadsView(this.download_manager);
+            this.config_view = new Ontis.ConfigView(notebook);
+
+            this.web_view = new Ontis.WebView();
+            this.web_view.title_changed.connect(this.title_changed_cb);
+            this.web_view.icon_loaded.connect((pixbuf) => { this.icon_loaded(pixbuf); });
+            this.web_view.new_download.connect((download) => { this.new_download(download); });
+            this.web_view.load_state_changed.connect((state) => this.toolbar.set_load_state(state));
+            this.web_view.uri_changed.connect(this.uri_changed_cb);
+            this.pack_start(this.web_view, true, true, 0);
         }
 
         private void title_changed_cb(Ontis.WebView view, string title, string uri) {
@@ -134,6 +134,10 @@ namespace Ontis {
                 case Utils.ViewMode.DOWNLOADS:
                     this.remove(this.downloads_view);
                     break;
+
+                case Utils.ViewMode.CONFIG:
+                    this.remove(this.config_view);
+                    break;
             }
 
             this.mode = view;
@@ -148,6 +152,10 @@ namespace Ontis {
 
                 case Utils.ViewMode.DOWNLOADS:
                     this.pack_start(this.downloads_view, true, true, 0);
+                    break;
+
+                case Utils.ViewMode.CONFIG:
+                    this.pack_start(this.config_view, true, true, 0);
                     break;
             }
 
