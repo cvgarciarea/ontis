@@ -90,7 +90,6 @@ namespace Ontis {
             menu.append_item(get_item("Search", "app.search"));
             menu.append_item(get_item("Print", "app.print"));
             menu.append_item(get_item("Save page as", "app.download-page"));
-            menu.append_item(get_item("Find", "app.find"));
             menu.append_item(get_item("Settings", "app.settings"));
             menu.append_item(get_item("About Ontis", "app.about"));
             menu.append_item(get_item("Exit", "app.exit"));

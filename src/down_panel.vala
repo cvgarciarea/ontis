@@ -140,7 +140,7 @@ namespace Ontis {
             this.label = new Gtk.Label(null);
             this.label.set_ellipsize(Pango.EllipsizeMode.END);
             this.label.override_font(Pango.FontDescription.from_string("10"));
-            this.pack_start(this.label, true, true, 0);
+            this.pack_start(this.label, false, true, 0);
 
             this.zoom_scale = new ZoomScale();
             this.zoom_scale.zoom_changed.connect(this.zoom_changed_cb);
