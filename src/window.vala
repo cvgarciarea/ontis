@@ -110,7 +110,7 @@ namespace Ontis {
         public void new_page(string? url="google.com") {
             Ontis.View view = new Ontis.View(this.notebook, this.download_manager);
             view.set_vexpand(true);
-            //view.icon_loaded.connect(this.icon_loaded_cb);
+            view.icon_loaded.connect(this.icon_loaded_cb);
             //view.new_download.connect(this.new_download_cb);
 
             //NotebookTab tab = new NotebookTab("New page", view);
@@ -151,8 +151,8 @@ namespace Ontis {
         //    }
         //}
 
-        private void icon_loaded_cb(View view, Gdk.Pixbuf? pixbuf) {
-            //view.tab.set_pixbuf(pixbuf);
+        private void icon_loaded_cb(Ontis.View view, Gdk.Pixbuf? pixbuf) {
+            view.tab.set_pixbuf(pixbuf);
         }
 
         private void new_download_cb(WebKit.Download download) {

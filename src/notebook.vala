@@ -42,6 +42,7 @@ namespace Ontis {
 
         public string label = "";
         public int position = 0;
+        public Gdk.Pixbuf? pixbuf = null;
 
         public int close_x = 0;
         public int close_y = 0;
@@ -53,6 +54,7 @@ namespace Ontis {
         public NotebookTab(string label, int position) {
             this.label = label;
             this.position = position;
+            this.pixbuf = Utils.get_image_from_name("gtk-missing-image", 24).get_pixbuf();
         }
 
         public void set_title(string label) {
@@ -61,6 +63,14 @@ namespace Ontis {
 
         public string get_title() {
             return this.label;
+        }
+
+        public void set_pixbuf(Gdk.Pixbuf pixbuf) {
+            this.pixbuf = pixbuf;
+        }
+
+        public Gdk.Pixbuf get_pixbuf() {
+            return this.pixbuf;
         }
     }
 
@@ -122,6 +132,8 @@ namespace Ontis {
         public bool show_buttons = false;
         public int top_space = 15;
 
+        private bool mouse_pressed = false;
+
         public Gtk.DrawingArea switcher;
         public Gtk.Box box;
 
@@ -181,6 +193,7 @@ namespace Ontis {
         private bool button_press_cb(Gtk.Widget switcher, Gdk.EventButton event) {
             // For drag and drop
             if (event.button != 1) {
+                this.mouse_pressed = true;
                 return false;
             }
 
@@ -189,6 +202,7 @@ namespace Ontis {
 
         private bool button_release_cb(Gtk.Widget switcher, Gdk.EventButton event) {
             if (event.button != 1) {  // FIXME: Check button == 3, for popup menu
+                this.mouse_pressed = false;
                 return false;
             }
 
@@ -456,38 +470,39 @@ namespace Ontis {
 
                 // First rectangle
                 context.set_source_rgb(br, bg, bb);
-                context.rectangle(max_width * current + 10, 2, max_width - 20, height - 4);
+                context.rectangle(max_width * current + 10, 2, max_width - 20, height - 2);
                 context.fill();
 
                 // Draw triangles
                 context.set_line_width(2);
 
-                //context.curve_to(max_width * current, height - 2, max_width * current + 10, 2, max_width * current + 12, 2);
-                //context.stroke();
-
                 context.new_path();
-                context.move_to(max_width * current, height - 2);
+                context.move_to(max_width * current, height);
                 context.line_to(max_width * current + 10, 2);
-                context.line_to(max_width * current + 10, height - 2);
+                context.line_to(max_width * current + 10, height);
                 context.close_path();
                 context.fill();
-
-                //context.curve_to(max_width * (current + 1), height - 1, max_width * (current + 1) - 10, 2, max_width * (current + 1) - 12, 2);
-                //context.stroke();
 
                 context.new_path();
-                context.move_to(max_width * (current + 1), height - 2);
+                context.move_to(max_width * (current + 1), height);
                 context.line_to(max_width * (current + 1) - 10, 2);
-                context.line_to(max_width * (current + 1) - 10, height - 2);
+                context.line_to(max_width * (current + 1) - 10, height);
                 context.close_path();
                 context.fill();
+
+                // Paint the favicon
+                Gdk.Pixbuf pixbuf = tab.pixbuf;
+                int px = max_width * current + 10;
+                int py = tab.y + tab.height / 2 - pixbuf.height / 2;
+                Gdk.cairo_set_source_pixbuf(context, pixbuf, px, py);
+                context.paint();
 
                 // Render the label
-                int max_label_width = tab.width - 40;
+                int max_label_width = tab.width - pixbuf.width - 20 - 10 - 5; // 20 for the triangles, 10 for the close button and 5 for space
             	Cairo.TextExtents extents;
 	            context.text_extents(tab.label, out extents);
 
-                context.move_to(max_width * current + 20, 20);
+                context.move_to(tab.width * current + pixbuf.width + 15, tab.y + tab.height / 2 + extents.height / 2);
                 context.set_font_size(this.tab_label_size);
                 context.select_font_face(this.tab_label_font, Cairo.FontSlant.NORMAL, Cairo.FontWeight.NORMAL);
                 context.set_source_rgb(tr, tg, tb);
@@ -497,7 +512,7 @@ namespace Ontis {
                 } else {
                     string a = "";
                     for (int i=1; i <= tab.label.length; i++) {
-                        string b = tab.label.slice(0, i);
+                        string b = tab.label.slice(0, i) + "...";
                         Cairo.TextExtents e;
                         context.text_extents(b, out e);
                         if (e.width > max_label_width) {

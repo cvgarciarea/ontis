@@ -108,7 +108,7 @@ namespace Ontis {
 			    this.icon_loaded(null);
 			    Soup.Session session = WebKit.get_default_session();
 			    Soup.Message message = new Soup.Message.from_uri("GET", uri);
-			    //session.queue_message(message, this.icon_downloaded_cb);
+			    session.queue_message(message, this.icon_downloaded_cb);
 		    }
 	    }
 
