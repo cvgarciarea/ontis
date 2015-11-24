@@ -52,6 +52,10 @@ public class App: Gtk.Application {
 		action.activate.connect(this.new_window);
 		this.add_action(action);
 
+        action = new GLib.SimpleAction("close-tab", null);
+		action.activate.connect(this.close_tab);
+		this.add_action(action);
+
         action = new GLib.SimpleAction("history", null);
 		action.activate.connect(this.show_history);
 		this.add_action(action);
@@ -86,6 +90,7 @@ public class App: Gtk.Application {
 
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.t, Gdk.ModifierType.CONTROL_MASK), "app.new-tab", null);
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.n, Gdk.ModifierType.CONTROL_MASK), "app.new-window", null);
+        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.w, Gdk.ModifierType.CONTROL_MASK), "app.close-tab", null);
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.h, Gdk.ModifierType.CONTROL_MASK), "app.history", null);
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.d, Gdk.ModifierType.CONTROL_MASK), "app.downloads", null);
         this.add_accelerator(Gtk.accelerator_name(Gdk.Key.f, Gdk.ModifierType.CONTROL_MASK), "app.search", null);
@@ -103,6 +108,11 @@ public class App: Gtk.Application {
     public void new_window(GLib.Variant? variant=null) {
         Ontis.Window win = new Ontis.Window();
         this.add_window(win);
+    }
+
+    public void close_tab(GLib.Variant? variant=null) {
+        Ontis.Window win = this.get_current_window();
+        win.notebook.remove_page(win.notebook.current_page);
     }
 
     public void show_history(GLib.Variant? variant=null) {
