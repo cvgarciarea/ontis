@@ -20,9 +20,10 @@ namespace Ontis {
 
     public class Download: GLib.Object {
 
-        public signal void start();
+        public signal void started();
         public signal void progress_changed(int size);
-        public signal void finish();
+        public signal void finished();
+        public signal void cancelled();
 
         public int current_size;
         public int total_size;
@@ -54,6 +55,28 @@ namespace Ontis {
             return this.total_size;
         }
 
+        public string get_uri() {
+            return this.download.get_uri();
+        }
+
+        public string get_destination_file() {
+            return this.path;
+        }
+
+        public string get_estimated_time() {
+            return this.download.get_elapsed_time().to_string();
+        }
+
+        public void stop() {
+            this.download.cancel();
+        }
+
+        public void pause() {
+        }
+
+        public void unpause() {
+        }
+
         private void status_changed_cb(GLib.ParamSpec paramspec) {
             var status = this.download.get_status();
             this.total_size = (int)this.download.get_total_size();
@@ -70,11 +93,11 @@ namespace Ontis {
                     break;
 
                 case WebKit.DownloadStatus.CANCELLED:
-                    stdout.printf("download cacelled\n");
+                    this.cancelled();
                     break;
 
                 case WebKit.DownloadStatus.FINISHED:
-                    this.finish();
+                    this.finished();
                     break;
             }
         }
@@ -89,18 +112,17 @@ namespace Ontis {
 
     public class DownloadManager: GLib.Object {
 
-        public signal void new_download(Download download);
+        public signal void new_download(Ontis.Download download);
 
-        GLib.List<Download> downloads;
+        public GLib.List<Ontis.Download> downloads;
 
         public DownloadManager() {
-            this.downloads = new GLib.List<Download>();
+            this.downloads = new GLib.List<Ontis.Download>();
         }
 
         public void add_download(WebKit.Download d) {
-            Download download = new Download(d);
+            Ontis.Download download = new Ontis.Download(d);
             downloads.append(download);
-            //connect signals;
             this.new_download(download);
         }
     }

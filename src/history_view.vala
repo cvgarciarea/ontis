@@ -69,6 +69,10 @@ namespace Ontis {
                     }
                 }
 
+                if ("###space###" in name) {
+                    name = name.replace("###space###", " ");
+                }
+
                 Gtk.ListBoxRow row = new Gtk.ListBoxRow();
                 this.listbox.add(row);
 
@@ -81,6 +85,7 @@ namespace Ontis {
 
                 Gtk.LinkButton lbutton = new Gtk.LinkButton.with_label(url, name + " " + url);
                 lbutton.set_visited(false);
+                lbutton.set_relief(Gtk.ReliefStyle.NONE);
                 lbutton.activate_link.connect(this.open_link);
                 hbox.pack_start(lbutton, false, false, 0);
             }

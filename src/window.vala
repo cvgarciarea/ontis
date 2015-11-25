@@ -107,17 +107,13 @@ namespace Ontis {
             return view;
         }
 
-        public void new_page(string? url="google.com") {
+        public void new_page(string? url="http://debian.xfree.com.ar/debian-cd/8.2.0/arm64/iso-cd/?C=S;O=A") {
             Ontis.View view = new Ontis.View(this.notebook, this.download_manager);
             view.set_vexpand(true);
             view.icon_loaded.connect(this.icon_loaded_cb);
-            //view.new_download.connect(this.new_download_cb);
+            view.new_download.connect(this.new_download_cb);
 
-            //NotebookTab tab = new NotebookTab("New page", view);
-            //tab.close_now.connect(this.close_tab);
-            //view.set_tab(tab);
-
-            Ontis.NotebookTab tab = this.notebook.append_page("Google", view);
+            Ontis.NotebookTab tab = this.notebook.append_page("New tab", view);
             view.set_tab(tab);
             this.notebook.set_current_page(this.notebook.n_pages - 1);
 
@@ -142,14 +138,6 @@ namespace Ontis {
                 }
             }
         }*/
-
-        //public void close_tab(Gtk.Box vbox) {
-        //    this.remove_page(this.get_children().index(vbox));
-
-        //    if (this.get_children().length() == 0) {
-        //        this.close();
-        //    }
-        //}
 
         private void icon_loaded_cb(Ontis.View view, Gdk.Pixbuf? pixbuf) {
             view.tab.set_pixbuf(pixbuf);

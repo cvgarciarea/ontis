@@ -74,7 +74,7 @@ namespace Utils {
 
     public string search_in_google(string search) {
         string text = search.replace(" ", "+");
-        return "https://www.google.com.uy/?gws_rd=cr&ei=vRJEVaPsNImlgwSh44DYBA#q=%s".printf(text);
+        return "https://www.google.com.uy/?#q=%s".printf(text);
     }
 
     public string parse_uri(string uri) {
@@ -110,7 +110,14 @@ namespace Utils {
         }
     }
 
-    public void save_to_history(string uri, string name) {
+    public void save_to_history(string uri, string n) {
+        string name;
+        if (" " in n) {
+            name = n.replace(" ", "###space###");
+        } else {
+            name = n;
+        }
+
         var now = new DateTime.now_local();
         Json.Array history = get_history();
         string data = now.format("%x %X") + " %s %s".printf(name, uri);
@@ -136,5 +143,45 @@ namespace Utils {
         } catch {
             return new Json.Array();
         }
+    }
+
+    public Gdk.Pixbuf get_pixbuf_from_path(string path, int size = 48) {
+        Gtk.IconTheme icon_theme = Gtk.IconTheme.get_default();
+        GLib.File file = GLib.File.new_for_path(path);
+        Gdk.Pixbuf null_pixbuf = get_image_from_name("gtk-missing-image", 24).get_pixbuf();
+        GLib.FileInfo info;
+
+        try {
+    		info = file.query_info("standard::icon", 0);
+    	} catch (GLib.Error e) {
+    	    return null_pixbuf.copy();
+    	}
+
+		GLib.Icon icon = info.get_icon();
+
+        string[] icon_names = icon.to_string().split(" ");
+        Gtk.IconInfo icon_info = icon_theme.choose_icon(icon_names, size, Gtk.IconLookupFlags.GENERIC_FALLBACK);
+
+        try {
+            return icon_info.load_icon();
+        } catch (GLib.Error e) {
+            return null_pixbuf.copy();
+        }
+    }
+
+    public void convert_size(double bytes, out double size, out string unity) {
+        size = 0;
+        unity = "B";
+
+        string[] unities = { "KB", "MB", "GB", "TB" };
+        foreach (string u in unities) {
+            if (bytes >= 1024) {
+                bytes /= 1024;
+                unity = u;
+            } else {
+                break;
+            }
+        }
+        size = bytes;
     }
 }

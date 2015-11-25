@@ -50,11 +50,12 @@ namespace Ontis {
         public int close_height = 0;
 
         public bool mouse_in_close_button = false;
+        private static Gdk.Pixbuf null_pixbuf = Utils.get_image_from_name("gtk-missing-image", 24).get_pixbuf();
 
         public NotebookTab(string label, int position) {
             this.label = label;
             this.position = position;
-            this.pixbuf = Utils.get_image_from_name("gtk-missing-image", 24).get_pixbuf();
+            this.pixbuf = this.null_pixbuf.copy();
         }
 
         public void set_title(string label) {
@@ -65,8 +66,8 @@ namespace Ontis {
             return this.label;
         }
 
-        public void set_pixbuf(Gdk.Pixbuf pixbuf) {
-            this.pixbuf = pixbuf;
+        public void set_pixbuf(Gdk.Pixbuf? pixbuf) {
+            this.pixbuf = (pixbuf != null)? pixbuf: this.null_pixbuf.copy();
         }
 
         public Gdk.Pixbuf get_pixbuf() {
