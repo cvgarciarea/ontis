@@ -107,7 +107,7 @@ namespace Ontis {
             return view;
         }
 
-        public void new_page(string? url="http://debian.xfree.com.ar/debian-cd/8.2.0/arm64/iso-cd/?C=S;O=A") {
+        public void new_page(string? url="google.com") {
             Ontis.View view = new Ontis.View(this.notebook, this.download_manager);
             view.set_vexpand(true);
             view.icon_loaded.connect(this.icon_loaded_cb);
