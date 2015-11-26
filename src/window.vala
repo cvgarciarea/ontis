@@ -50,7 +50,6 @@ namespace Ontis {
 
             this.set_titlebar(this.notebook.switcher);
 
-            //this.window_state_event.connect(this.state_changed_cb);
             this.configure_event.connect(this.state_changed_cb);
 
             this.new_page();

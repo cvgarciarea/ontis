@@ -29,6 +29,8 @@ namespace Ontis {
         public Ontis.Cache cache;
         public WebKit.WebView view;
         public Ontis.DownPanel down_panel;
+        
+        public Gdk.Pixbuf? pixbuf = null;
 
         public WebView() {
             this.cache = new Ontis.Cache();
@@ -50,6 +52,12 @@ namespace Ontis {
             this.down_panel = new Ontis.DownPanel();
             this.down_panel.zoom_level_changed.connect(this.zoom_level_changed_cb);
             this.pack_end(this.down_panel, false, false, 0);
+
+            this.icon_loaded.connect(this._set_pixbuf);
+        }
+
+        private void _set_pixbuf(Ontis.WebView view, Gdk.Pixbuf? pixbuf) {
+            this.pixbuf = pixbuf;
         }
 
         private void title_changed_cb(WebKit.WebView view, WebKit.WebFrame frame, string title) {

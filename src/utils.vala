@@ -55,6 +55,18 @@ namespace Utils {
         return GLib.Path.build_filename(get_work_dir(), "history.json");
     }
 
+    public Gdk.Pixbuf get_history_pixbuf() {
+        return get_image_from_name("document-open-recent-symbolic", 16).get_pixbuf();
+    }
+
+    public Gdk.Pixbuf get_downloads_pixbuf() {
+        return get_image_from_name("document-save-symbolic", 16).get_pixbuf();
+    }
+
+    public Gdk.Pixbuf get_config_pixbuf() {
+        return get_image_from_name("emblem-system-symbolic", 16).get_pixbuf();
+    }
+
     public void check_paths() {
         GLib.File work_dir = GLib.File.new_for_path(get_work_dir());
         GLib.File history_path = GLib.File.new_for_path(get_history_path());
@@ -148,7 +160,7 @@ namespace Utils {
     public Gdk.Pixbuf get_pixbuf_from_path(string path, int size = 48) {
         Gtk.IconTheme icon_theme = Gtk.IconTheme.get_default();
         GLib.File file = GLib.File.new_for_path(path);
-        Gdk.Pixbuf null_pixbuf = get_image_from_name("gtk-missing-image", 24).get_pixbuf();
+        Gdk.Pixbuf null_pixbuf = get_image_from_name("text-x-generic-symbolic", 24).get_pixbuf();
         GLib.FileInfo info;
 
         try {

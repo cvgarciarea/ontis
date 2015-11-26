@@ -50,7 +50,7 @@ namespace Ontis {
         public int close_height = 0;
 
         public bool mouse_in_close_button = false;
-        private static Gdk.Pixbuf null_pixbuf = Utils.get_image_from_name("gtk-missing-image", 24).get_pixbuf();
+        private static Gdk.Pixbuf null_pixbuf = Utils.get_image_from_name("text-x-generic-symbolic", 16).get_pixbuf();
 
         public NotebookTab(string label, int position) {
             this.label = label;

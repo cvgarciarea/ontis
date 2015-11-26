@@ -143,18 +143,22 @@ namespace Ontis {
             this.mode = view;
             switch(this.get_mode()) {
                 case Utils.ViewMode.WEB:
+                    this.icon_loaded(this.web_view.pixbuf);
                     this.pack_start(this.web_view, true, true, 0);
                     break;
 
                 case Utils.ViewMode.HISTORY:
+                    this.icon_loaded(Utils.get_history_pixbuf());
                     this.pack_start(this.history_view, true, true, 0);
                     break;
 
                 case Utils.ViewMode.DOWNLOADS:
+                    this.icon_loaded(Utils.get_downloads_pixbuf());
                     this.pack_start(this.downloads_view, true, true, 0);
                     break;
 
                 case Utils.ViewMode.CONFIG:
+                    this.icon_loaded(Utils.get_config_pixbuf());
                     this.pack_start(this.config_view, true, true, 0);
                     break;
             }
