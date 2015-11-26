@@ -29,6 +29,7 @@ namespace Ontis {
 
         public Window() {
             this.set_default_size(620, 420);
+            this.set_title("Ontis");
             //this.set_app_paintable(true);
             //this.set_visual(screen.get_rgba_visual());
 
@@ -48,6 +49,9 @@ namespace Ontis {
             this.canvas.pack_start(this.notebook, true, true, 0);
 
             this.set_titlebar(this.notebook.switcher);
+
+            //this.window_state_event.connect(this.state_changed_cb);
+            this.configure_event.connect(this.state_changed_cb);
 
             this.new_page();
             this.show_all();
@@ -69,6 +73,20 @@ namespace Ontis {
             if (this.notebook.n_pages == 0) {
                 this.destroy();
             }
+        }
+
+        private bool state_changed_cb(Gtk.Widget widget, Gdk.EventConfigure event) { //Gdk.EventWindowState event) {
+            if (this.is_maximized) {
+                this.notebook.top_space = 2;
+                this.notebook.switcher.set_size_request(1, 32);
+            } else {
+                this.notebook.top_space = 15;
+                this.notebook.switcher.set_size_request(1, 45);
+            }
+
+            GLib.Idle.add(() => { this.notebook.switcher.queue_draw(); return false; });
+
+            return false;
         }
 
         public void full_screen_mode(Ontis.Notebook notebook) {
