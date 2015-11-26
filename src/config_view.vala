@@ -42,9 +42,7 @@ namespace Ontis {
 
             this.popover = new Gtk.Popover(this);
             this.popover.set_border_width(8);
-            this.popover.hide.connect(() => {
-                this.set_active(false);
-            });
+            this.popover.hide.connect(this.hide_cb);
 
             Gtk.Box popover_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
             this.popover.add(popover_box);
@@ -72,6 +70,11 @@ namespace Ontis {
             context.rectangle(0, 0, this.area_width, this.area_height);
             context.fill();
             return false;
+        }
+
+        private void hide_cb(Gtk.Widget popover) {
+            this.set_active(false);
+            this.chooser.show_editor = false;
         }
 
         private void color_activated_cb(Gtk.ColorChooser chooser, Gdk.RGBA color) {
