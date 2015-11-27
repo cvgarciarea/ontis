@@ -33,6 +33,7 @@ namespace Ontis {
         public Gdk.Pixbuf? pixbuf = null;
 
         public WebView() {
+            this.search_entry.changed.connect(() => { this.search_text(this.search_entry.get_text()); });
             this.cache = new Ontis.Cache();
 
             this.view = new WebKit.WebView();
@@ -85,16 +86,21 @@ namespace Ontis {
 
         private void load_finishied_cb(WebKit.WebView view, WebKit.WebFrame frame) {
             this.load_state_changed(Utils.LoadState.LOADING);
-            //this.toolbar.set_load_state(Utils.LoadState.LOADING);
         }
 
-        public void load_committed_cb(WebKit.WebView view, WebKit.WebFrame frame) {
-            //this.entry.set_text(this.view.get_uri());
-            //this.toolbar.set_back_forward_list(this.view.get_back_forward_list(), this.view.can_go_back(), this.view.can_go_forward());
+        private void load_committed_cb(WebKit.WebView view, WebKit.WebFrame frame) {
             this.uri_changed(this.view.get_uri());
         }
 
-        public bool mime_type_policy_decision_requested_cb(WebKit.WebView view, WebKit.WebFrame frame, WebKit.NetworkRequest network_request, string thing, WebKit.WebPolicyDecision decision) {
+        private bool mime_type_policy_decision_requested_cb(
+                WebKit.WebView view, WebKit.WebFrame frame,
+                WebKit.NetworkRequest network_request, string mimetype,
+                WebKit.WebPolicyDecision decision) {
+
+            if (!this.view.can_show_mime_type(mimetype)) {
+                decision.download();
+            }
+
             return true;
         }
 
@@ -135,6 +141,9 @@ namespace Ontis {
 		    } catch (Error e) {
 			    this.icon_loaded(null);
 		    }
+        }
+
+        public void search_text(string text) {
         }
 
         public void zoom_level_changed_cb(Ontis.DownPanel down_panel, int zoom) {
