@@ -188,24 +188,32 @@ namespace Ontis {
             this.mouse_y = y;
             this.update_switcher();
 
-            return false;
+            return this.mouse_pressed;
         }
 
         private bool button_press_cb(Gtk.Widget switcher, Gdk.EventButton event) {
             // For drag and drop
-            if (event.button != 1) {
-                this.mouse_pressed = true;
+            if (event.button != 1 || this.tabs.length() == 0) {
                 return false;
             }
 
-            return false;
+            int x = (int)event.x;
+            int y = (int)event.y;
+            bool on_tab = false;
+
+            foreach (NotebookTab tab in this.tabs) {
+                if (tab.mouse_in) {
+                    on_tab = true;
+                    break;
+                }
+            }
+
+            this.mouse_pressed = on_tab;
+            return this.mouse_pressed;
         }
 
         private bool button_release_cb(Gtk.Widget switcher, Gdk.EventButton event) {
-            if (event.button != 1) {  // FIXME: Check button == 3, for popup menu
-                this.mouse_pressed = false;
-                return false;
-            }
+            this.mouse_pressed = false;
 
             int current = 0;
 

@@ -90,19 +90,28 @@ namespace Utils {
     }
 
     public string parse_uri(string uri) {
-        string url;
+        string? url = null;
+        string[] search_chars = { " " };
+        string[] hosts = { "http://", "https://", "ftp://", "file;//" };
 
-        if (" " in uri || !("." in uri) && !("/" in uri)) {
-            url = search_in_google(uri);
-        } else {
-            if (!("http://" in uri) && !("https://" in uri) && !("ftp://" in uri) && !("file:///" in uri)) {
-                url = "https://" + uri;
-            } else {
-                url = uri;
+        foreach (string _char in search_chars) {
+            if (_char in uri) {
+                url = search_in_google(uri);
+                break;
             }
         }
 
-        return url;
+        if (url != null) {
+            return url;
+        }
+
+        foreach (string host in hosts) {
+            if (uri.has_prefix(host)) {
+                return uri;
+            }
+        }
+
+        return "http://" + uri;
     }
 
     public Gtk.Image get_image_from_name(string icon, int size=24) {

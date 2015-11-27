@@ -40,10 +40,10 @@ namespace Ontis {
             this.view.title_changed.connect(this.title_changed_cb);
             this.view.download_requested.connect(this.download_requested_cb);
             this.view.icon_loaded.connect(this.icon_loaded_cb);
-            //this.view.load_error.connect(this.load_error_cb);
             this.view.load_started.connect(this.load_started_cb);
             this.view.load_progress_changed.connect(this.load_progress_changed_cb);
             this.view.load_finished.connect(this.load_finishied_cb);
+            this.view.load_error.connect(this.load_error_cb);
             this.view.load_committed.connect(this.load_committed_cb);
             this.view.mime_type_policy_decision_requested.connect(this.mime_type_policy_decision_requested_cb);
             this.view.status_bar_text_changed.connect(this.status_bar_text_changed_cb);
@@ -90,6 +90,11 @@ namespace Ontis {
 
         private void load_committed_cb(WebKit.WebView view, WebKit.WebFrame frame) {
             this.uri_changed(this.view.get_uri());
+        }
+
+        private bool load_error_cb(WebKit.WebView view, WebKit.WebFrame frame, string error, GLib.Error e) {
+            print(@"Error $error\n");
+            return false;
         }
 
         private bool mime_type_policy_decision_requested_cb(
@@ -155,11 +160,7 @@ namespace Ontis {
         }
 
         public void hovering_over_link_cb(WebKit.WebView view, string? link, string? title) {
-            if (link != null) {
-                this.down_panel.set_text(link);
-            } else {
-                this.down_panel.set_text("");
-            }
+            this.down_panel.set_text((link != null)? link: "");
         }
     }
 }
