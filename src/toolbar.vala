@@ -78,21 +78,35 @@ namespace Ontis {
             this.pack_start(this.button_menu, false, false, 0);
 
             GLib.Menu menu = new GLib.Menu();
-            menu.append_item(get_item("New tab", "app.new-tab"));
+            menu.append_item(get_item("New tab", "app.new-tab", "tab-new-symbolic"));
             menu.append_item(get_item("New window", "app.new-window"));
             menu.append_item(get_item("New private window", "app.new-private-window"));
-            // separator
-            menu.append_item(get_item("History", "app.history"));
-            menu.append_item(get_item("Downloads", "app.downloads"));
-            menu.append_item(get_item("Recent tabs", "app.recent-tabs"));
-            menu.append_item(get_item("Favorites", "app.favorites"));
-            // separator
-            menu.append_item(get_item("Search", "app.search"));
-            menu.append_item(get_item("Print", "app.print"));
-            menu.append_item(get_item("Save page as", "app.download-page"));
-            menu.append_item(get_item("Settings", "app.settings"));
-            menu.append_item(get_item("About Ontis", "app.about"));
-            menu.append_item(get_item("Exit", "app.exit"));
+
+            GLib.Menu section = new GLib.Menu();
+            menu.append_section(null, section);
+            section.append_item(get_item("History", "app.history"));
+            section.append_item(get_item("Downloads", "app.downloads"));
+            section.append_item(get_item("Recent tabs", "app.recent-tabs"));
+            section.append_item(get_item("Favorites", "app.favorites"));
+
+            section = new GLib.Menu();
+            menu.append_section(null, section);
+
+            section.append_item(get_item("Search", "app.search"));
+            section.append_item(get_item("Print", "app.print"));
+            section.append_item(get_item("Save page as", "app.download-page"));
+
+            GLib.Menu submenu = new GLib.Menu();
+            section.append_submenu("More tools", submenu);
+
+            submenu.append_item(get_item("View page source", "app.show-view"));
+            submenu.append_item(get_item("Save page as PDF", "app.page-to-pdf"));
+
+            section = new GLib.Menu();
+            menu.append_section(null, section);
+            section.append_item(get_item("Settings", "app.settings"));
+            section.append_item(get_item("About Ontis", "app.about"));
+            section.append_item(get_item("Exit", "app.exit"));
 
             this.menu_popover = new Gtk.Popover.from_model(this.button_menu, menu);
             this.menu_popover.closed.connect(this.menu_popover_closed_cb);
@@ -100,11 +114,8 @@ namespace Ontis {
 
         public void set_load_state(int state) {
             this.state = state;
-            if (this.state == Utils.LoadState.LOADING) {
-                this.button_reload.set_image(Utils.get_image_from_name("view-refresh"));
-            } else if (this.state == Utils.LoadState.FINISHED) {
-                this.button_reload.set_image(Utils.get_image_from_name("window-close"));
-            }
+            Gtk.Image image = Utils.get_image_from_name((this.state == Utils.LoadState.LOADING)? "view-refresh": "window-close");
+            this.button_reload.set_image(image);
         }
 
         public void set_back_forward_list(WebKit.WebBackForwardList list, bool can_go_back, bool can_go_forward) {
@@ -127,8 +138,17 @@ namespace Ontis {
             this.button_forward.set_sensitive(can_go_forward);
         }
 
-        private GLib.MenuItem get_item(string name, string action) {
+        private GLib.MenuItem get_item(string name, string action, string? icon_name = null) {
             GLib.MenuItem item = new GLib.MenuItem(name, action);
+
+            if (icon_name != null) {
+                try {
+                    GLib.Icon icon = GLib.Icon.new_for_string(icon_name);
+                    item.set_icon(icon);
+                } catch (GLib.Error e) {
+                }
+            }
+
             return item;
         }
 

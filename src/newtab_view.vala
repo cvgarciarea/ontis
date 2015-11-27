@@ -31,7 +31,7 @@ namespace Ontis {
 
             this.entry = new Gtk.SearchEntry();
             this.entry.set_size_request(400, 1);
-            this.entry.set_placeholder_text("Search...");
+            this.entry.set_placeholder_text("Search or enter web adress");
             this.pack_start(this.entry, false, false, 0);
 
             this.entry.activate.connect(() => {
