@@ -124,7 +124,7 @@ namespace Ontis {
             return view;
         }
 
-        public void new_page(string? url="google.com") {
+        public void new_page(string? url=Utils.URL_NEWTAB) {
             Ontis.View view = new Ontis.View(this.notebook, this.download_manager);
             view.set_vexpand(true);
             view.icon_loaded.connect(this.icon_loaded_cb);

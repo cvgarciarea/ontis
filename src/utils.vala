@@ -18,10 +18,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 namespace Utils {
 
+    public const string URL_NEWTAB = "ontis://newtab";
     public const string URL_HISTORY = "ontis://history";
     public const string URL_DOWNLOADS = "ontis://downloads";
     public const string URL_CONFIG = "ontis://settings";
-    public const string[] SPECIAL_URLS = { URL_HISTORY, URL_DOWNLOADS, URL_CONFIG };
+    public const string[] SPECIAL_URLS = { URL_NEWTAB, URL_HISTORY, URL_DOWNLOADS, URL_CONFIG };
 
     public enum LoadState {
         LOADING,
@@ -30,6 +31,7 @@ namespace Utils {
 
     public enum ViewMode {
         WEB,
+        NEWTAB,
         HISTORY,
         DOWNLOADS,
         CONFIG,
@@ -53,6 +55,10 @@ namespace Utils {
 
     public string get_history_path() {
         return GLib.Path.build_filename(get_work_dir(), "history.json");
+    }
+
+    public Gdk.Pixbuf get_newtab_pixbuf() {
+        return get_image_from_name("go-home-symbolic", 16).get_pixbuf();
     }
 
     public Gdk.Pixbuf get_history_pixbuf() {
@@ -90,19 +96,20 @@ namespace Utils {
     }
 
     public string parse_uri(string uri) {
-        string? url = null;
         string[] search_chars = { " " };
-        string[] hosts = { "http://", "https://", "ftp://", "file;//" };
+        string[] url_chars = { "." };
+        string[] hosts = { "http://", "https://", "ftp://", "file://" };
 
         foreach (string _char in search_chars) {
             if (_char in uri) {
-                url = search_in_google(uri);
-                break;
+                return search_in_google(uri);
             }
         }
 
-        if (url != null) {
-            return url;
+        foreach (string _char in url_chars) {
+            if (!(_char in uri)) {
+                return search_in_google(uri);
+            }
         }
 
         foreach (string host in hosts) {
@@ -111,6 +118,7 @@ namespace Utils {
             }
         }
 
+        print(uri);
         return "http://" + uri;
     }
 

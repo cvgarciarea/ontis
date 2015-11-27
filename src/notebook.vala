@@ -197,8 +197,8 @@ namespace Ontis {
                 return false;
             }
 
-            int x = (int)event.x;
-            int y = (int)event.y;
+            //int x = (int)event.x;
+            //int y = (int)event.y;
             bool on_tab = false;
 
             foreach (NotebookTab tab in this.tabs) {

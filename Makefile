@@ -9,6 +9,7 @@ VALAPKG = --pkg gtk+-3.0 \
 SRC = src/cache.vala \
       src/downloads_manager.vala \
       src/down_panel.vala \
+      src/newtab_view.vala \
       src/history_view.vala \
       src/ontis.vala \
       src/view.vala \

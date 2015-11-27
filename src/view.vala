@@ -29,6 +29,7 @@ namespace Ontis {
         public Ontis.NotebookTab tab;
         public Gtk.Box hbox;
         public Ontis.WebView web_view;
+        public Ontis.NewTabView newtab_view;
         public Ontis.HistoryView history_view;
         public Ontis.DownloadsView downloads_view;
         public Ontis.ConfigView config_view;
@@ -54,6 +55,9 @@ namespace Ontis {
             this.entry.activate.connect(() => {
                 this.open(this.entry.get_text());
             });
+
+            this.newtab_view = new Ontis.NewTabView();
+            this.newtab_view.search.connect((text) => { this.open(text); });
 
             this.history_view = new Ontis.HistoryView();
             this.history_view.open_url.connect((url) => { this.open(url); });
@@ -87,6 +91,12 @@ namespace Ontis {
                 string title = "History";
 
                 switch (uri) {
+                    case Utils.URL_NEWTAB:
+                        view = this.newtab_view;
+                        mode = Utils.ViewMode.NEWTAB;
+                        title = "New Tab";
+                        break;
+
                     case Utils.URL_HISTORY:
                         view = this.history_view;
                         mode = Utils.ViewMode.HISTORY;
@@ -127,6 +137,10 @@ namespace Ontis {
                     this.remove(this.web_view);
                     break;
 
+                case Utils.ViewMode.NEWTAB:
+                    this.remove(this.newtab_view);
+                    break;
+
                 case Utils.ViewMode.HISTORY:
                     this.remove(this.history_view);
                     break;
@@ -145,6 +159,10 @@ namespace Ontis {
                 case Utils.ViewMode.WEB:
                     this.icon_loaded(this.web_view.pixbuf);
                     this.pack_start(this.web_view, true, true, 0);
+                    break;
+
+                case Utils.ViewMode.NEWTAB:
+                    this.pack_start(this.newtab_view, true, true, 0);
                     break;
 
                 case Utils.ViewMode.HISTORY:
