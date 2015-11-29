@@ -13,14 +13,14 @@ SRC = src/cache.vala \
       src/history_view.vala \
       src/ontis.vala \
       src/view.vala \
-      src/canvas.vala \
       src/downloads_view.vala \
       src/web_view.vala \
       src/utils.vala \
       src/notebook.vala \
       src/toolbar.vala \
       src/bookmarks_bar.vala \
-      src/config_view.vala \
+      src/settings_manager.vala \
+      src/settings_view.vala \
       src/base_view.vala \
       src/window.vala
 

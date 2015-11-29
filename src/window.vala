@@ -20,22 +20,17 @@ namespace Ontis {
 
     public class Window: Gtk.ApplicationWindow {
 
-        //public WebKit.Settings settings;
-        public Ontis.Canvas canvas;
+        public Ontis.SettingsManager settings_manager;
         public Ontis.DownloadManager download_manager;
         public Ontis.Notebook notebook;
 
         public bool full_screen;
 
-        public Window() {
+        public Window(Ontis.SettingsManager settings_manager) {
             this.set_default_size(620, 420);
             this.set_title("Ontis");
-            //this.set_app_paintable(true);
-            //this.set_visual(screen.get_rgba_visual());
 
-            this.canvas = new Ontis.Canvas();
-            this.add(this.canvas);
-
+            this.settings_manager = settings_manager;
             this.download_manager = new Ontis.DownloadManager();
 
             this.notebook = new Ontis.Notebook();
@@ -46,7 +41,7 @@ namespace Ontis {
             this.notebook.turn_maxmizie.connect(this.turn_maximize_cb);
             this.notebook.close.connect(() => { this.destroy(); });
             this.notebook.page_removed.connect(this.page_removed_cb);
-            this.canvas.pack_start(this.notebook, true, true, 0);
+            this.add(this.notebook);
 
             this.set_titlebar(this.notebook.switcher);
 
@@ -125,7 +120,7 @@ namespace Ontis {
         }
 
         public void new_page(string? url=Utils.URL_NEWTAB) {
-            Ontis.View view = new Ontis.View(this.notebook, this.download_manager);
+            Ontis.View view = new Ontis.View(this.notebook, this.settings_manager, this.download_manager);
             view.set_vexpand(true);
             view.icon_loaded.connect(this.icon_loaded_cb);
             view.new_download.connect(this.new_download_cb);
@@ -180,8 +175,8 @@ namespace Ontis {
                     url = Utils.URL_DOWNLOADS;
                     break;
 
-                case Utils.ViewMode.CONFIG:
-                    url = Utils.URL_CONFIG;
+                case Utils.ViewMode.SETTINGS:
+                    url = Utils.URL_SETTINGS;
                     break;
             }
 
@@ -209,7 +204,7 @@ namespace Ontis {
         }
 
         public void show_settings() {
-            this.show_special_page(Utils.ViewMode.CONFIG);
+            this.show_special_page(Utils.ViewMode.SETTINGS);
         }
     }
 }

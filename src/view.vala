@@ -32,15 +32,17 @@ namespace Ontis {
         public Ontis.NewTabView newtab_view;
         public Ontis.HistoryView history_view;
         public Ontis.DownloadsView downloads_view;
-        public Ontis.ConfigView config_view;
+        public Ontis.SettingsView settings_view;
+        public Ontis.SettingsManager settings_manager;
         public Ontis.DownloadManager download_manager;
 
         public Utils.ViewMode mode;
 
-        public View(Ontis.Notebook notebook, Ontis.DownloadManager download_manager) {
+        public View(Ontis.Notebook notebook, Ontis.SettingsManager settings_manager, Ontis.DownloadManager download_manager) {
             this.set_orientation(Gtk.Orientation.VERTICAL);
 
             this.mode = Utils.ViewMode.WEB;
+            this.settings_manager = settings_manager;
             this.download_manager = download_manager;
 
             this.toolbar = new Ontis.Toolbar();
@@ -57,6 +59,15 @@ namespace Ontis {
             this.bookmarks_bar = new Ontis.BookmarksBar();
             this.pack_start(this.bookmarks_bar, false, false, 0);
 
+            this.web_view = new Ontis.WebView();
+            this.web_view.set_settings_manager(this.settings_manager);
+            this.web_view.title_changed.connect(this.title_changed_cb);
+            this.web_view.icon_loaded.connect((pixbuf) => { this.icon_loaded(pixbuf); });
+            this.web_view.new_download.connect((download) => { this.new_download(download); });
+            this.web_view.load_state_changed.connect((state) => this.toolbar.set_load_state(state));
+            this.web_view.uri_changed.connect(this.uri_changed_cb);
+            this.pack_start(this.web_view, true, true, 0);
+
             this.newtab_view = new Ontis.NewTabView();
             this.newtab_view.search.connect((text) => { this.open(text); });
 
@@ -64,15 +75,7 @@ namespace Ontis {
             this.history_view.open_url.connect((url) => { this.open(url); });
 
             this.downloads_view = new Ontis.DownloadsView(this.download_manager);
-            this.config_view = new Ontis.ConfigView(notebook);
-
-            this.web_view = new Ontis.WebView();
-            this.web_view.title_changed.connect(this.title_changed_cb);
-            this.web_view.icon_loaded.connect((pixbuf) => { this.icon_loaded(pixbuf); });
-            this.web_view.new_download.connect((download) => { this.new_download(download); });
-            this.web_view.load_state_changed.connect((state) => this.toolbar.set_load_state(state));
-            this.web_view.uri_changed.connect(this.uri_changed_cb);
-            this.pack_start(this.web_view, true, true, 0);
+            this.settings_view = new Ontis.SettingsView(this.settings_manager);
         }
 
         private void title_changed_cb(Ontis.WebView view, string title, string uri) {
@@ -110,9 +113,9 @@ namespace Ontis {
                         title = "Downloads";
                         break;
 
-                    case Utils.URL_CONFIG:
-                        view = this.config_view;
-                        mode = Utils.ViewMode.CONFIG;
+                    case Utils.URL_SETTINGS:
+                        view = this.settings_view;
+                        mode = Utils.ViewMode.SETTINGS;
                         title = "Settings";
                         break;
                 }
@@ -150,8 +153,8 @@ namespace Ontis {
                     this.remove(this.downloads_view);
                     break;
 
-                case Utils.ViewMode.CONFIG:
-                    this.remove(this.config_view);
+                case Utils.ViewMode.SETTINGS:
+                    this.remove(this.settings_view);
                     break;
             }
 
@@ -176,9 +179,9 @@ namespace Ontis {
                     this.pack_start(this.downloads_view, true, true, 0);
                     break;
 
-                case Utils.ViewMode.CONFIG:
-                    this.icon_loaded(Utils.get_config_pixbuf());
-                    this.pack_start(this.config_view, true, true, 0);
+                case Utils.ViewMode.SETTINGS:
+                    this.icon_loaded(Utils.get_settings_pixbuf());
+                    this.pack_start(this.settings_view, true, true, 0);
                     break;
             }
 

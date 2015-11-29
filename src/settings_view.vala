@@ -174,17 +174,17 @@ namespace Ontis {
         }
     }
 
-    public class ConfigView: Ontis.BaseView {
+    public class SettingsView: Ontis.BaseView {
 
-        public Ontis.Notebook notebook;
+        public Ontis.SettingsManager settings_manager;
         public Ontis.ListBox listbox;
 
-        public ConfigView(Ontis.Notebook notebook) {
-            this.notebook = notebook;
+        public SettingsView(Ontis.SettingsManager settings_manager) {
+            this.settings_manager = settings_manager;
 
-            this.listbox = new Ontis.ListBox();
             this.remove(this.scroll);
 
+            this.listbox = new Ontis.ListBox();
             this.pack_start(this.listbox, true, true, 0);
 
             this.listbox.new_section("Startup");
@@ -208,6 +208,7 @@ namespace Ontis {
             Gtk.Box hbox = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
             vbox.pack_start(hbox, false, false, 0);
 
+            /*
             Ontis.ColorButton button = new Ontis.ColorButton("Background color");
             button.set_color(this.notebook.bg_color);
             button.color_changed.connect(this.bg_color_changed);
@@ -265,7 +266,7 @@ namespace Ontis {
             button.set_color(this.notebook.button_label_color);
             button.color_changed.connect(this.button_label_color_changed);
             //hbox.pack_end(button, false, false, 2);
-
+            */
             this.listbox.new_section("Downloads");
 
             box = this.listbox.new_row("Save files to:");
@@ -289,15 +290,18 @@ namespace Ontis {
 
             box = this.listbox.new_row("Default font:");
             Gtk.FontButton font_button = new Gtk.FontButton();
+            font_button.set_font(this.settings_manager.font);
+            font_button.font_set.connect(() => { this.settings_manager.font = font_button.get_font_name(); });
             box.pack_end(font_button, false, false, 0);
 
-            box = this.listbox.new_row("Default font colr:");
-            button = new Ontis.ColorButton("Font color");
+            box = this.listbox.new_row("Default font color:");
+            Ontis.ColorButton button = new Ontis.ColorButton("Font color");
             box.pack_end(button, false, false, 0);
 
             this.show_all();
         }
 
+        /*
         private void bg_color_changed(Ontis.ColorButton button, double[] color) {
             this.notebook.bg_color = color;
         }
@@ -341,5 +345,6 @@ namespace Ontis {
         private void button_label_color_changed(Ontis.ColorButton button, double[] color) {
             this.notebook.button_label_color = color;
         }
+        */
     }
 }

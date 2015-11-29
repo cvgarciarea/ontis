@@ -86,7 +86,7 @@ namespace Ontis {
                     break;
 
                 case WebKit.DownloadStatus.CREATED:
-                    stdout.printf("download created\n");
+                    //("download created\n");
                     break;
 
                 case WebKit.DownloadStatus.STARTED:

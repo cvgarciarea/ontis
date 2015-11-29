@@ -29,6 +29,7 @@ namespace Ontis {
         public Ontis.Cache cache;
         public WebKit.WebView view;
         public Ontis.DownPanel down_panel;
+        public Ontis.SettingsManager settings_manager;
         
         public Gdk.Pixbuf? pixbuf = null;
 
@@ -93,7 +94,7 @@ namespace Ontis {
         }
 
         private bool load_error_cb(WebKit.WebView view, WebKit.WebFrame frame, string error, GLib.Error e) {
-            print(@"Error $error\n");
+            // (@"Error $error\n");
             return false;
         }
 
@@ -161,6 +162,11 @@ namespace Ontis {
 
         public void hovering_over_link_cb(WebKit.WebView view, string? link, string? title) {
             this.down_panel.set_text((link != null)? link: "");
+        }
+
+        public void set_settings_manager(Ontis.SettingsManager settings_manager) {
+            this.settings_manager = settings_manager;
+            // connect signals
         }
     }
 }

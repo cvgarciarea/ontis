@@ -18,12 +18,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 public class App: Gtk.Application {
 
+    public Ontis.SettingsManager settings_manager;
+
     public App() {
-        Object(application_id: "com.browser.Ontis", flags: GLib.ApplicationFlags.FLAGS_NONE);
+        GLib.Object(application_id: "com.browser.Ontis", flags: GLib.ApplicationFlags.FLAGS_NONE);
     }
 
 	protected override void activate() {
-	    this.register_session = true;
+	    this.settings_manager = new Ontis.SettingsManager();
+
+	    //this.register_session = true;
 	    this.window_removed.connect(this.window_removed_cb);
 	    this.add_actions();
         this.new_window();
@@ -106,7 +110,7 @@ public class App: Gtk.Application {
     }
 
     public void new_window(GLib.Variant? variant=null) {
-        Ontis.Window win = new Ontis.Window();
+        Ontis.Window win = new Ontis.Window(this.settings_manager);
         this.add_window(win);
     }
 
@@ -141,8 +145,8 @@ public class App: Gtk.Application {
                 view = current_view.downloads_view;
                 break;
 
-            case Utils.ViewMode.CONFIG:
-                view = current_view.config_view;
+            case Utils.ViewMode.SETTINGS:
+                view = current_view.settings_view;
                 break;
 
             default:  // Never happen

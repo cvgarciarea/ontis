@@ -21,8 +21,8 @@ namespace Utils {
     public const string URL_NEWTAB = "ontis://newtab";
     public const string URL_HISTORY = "ontis://history";
     public const string URL_DOWNLOADS = "ontis://downloads";
-    public const string URL_CONFIG = "ontis://settings";
-    public const string[] SPECIAL_URLS = { URL_NEWTAB, URL_HISTORY, URL_DOWNLOADS, URL_CONFIG };
+    public const string URL_SETTINGS = "ontis://settings";
+    public const string[] SPECIAL_URLS = { URL_NEWTAB, URL_HISTORY, URL_DOWNLOADS, URL_SETTINGS };
 
     public enum LoadState {
         LOADING,
@@ -34,7 +34,7 @@ namespace Utils {
         NEWTAB,
         HISTORY,
         DOWNLOADS,
-        CONFIG,
+        SETTINGS,
     }
 
     public string get_download_dir() {
@@ -69,7 +69,7 @@ namespace Utils {
         return get_image_from_name("document-save-symbolic", 16).get_pixbuf();
     }
 
-    public Gdk.Pixbuf get_config_pixbuf() {
+    public Gdk.Pixbuf get_settings_pixbuf() {
         return get_image_from_name("emblem-system-symbolic", 16).get_pixbuf();
     }
 
@@ -92,7 +92,7 @@ namespace Utils {
 
     public string search_in_google(string search) {
         string text = search.replace(" ", "+");
-        return "https://www.google.com.uy/?#q=%s".printf(text);
+        return @"https://www.google.com.uy/?#q=$text";
     }
 
     public string parse_uri(string uri) {
@@ -118,7 +118,6 @@ namespace Utils {
             }
         }
 
-        print(uri);
         return "http://" + uri;
     }
 
@@ -149,13 +148,13 @@ namespace Utils {
 
         var now = new DateTime.now_local();
         Json.Array history = get_history();
-        string data = now.format("%x %X") + " %s %s".printf(name, uri);
+        string data = @"$(now.format("%x %X")) $name $uri";
         history.add_string_element(data);
 
         var root_node = new Json.Node(Json.NodeType.ARRAY);
         root_node.set_array(history);
 
-        var generator = new Json.Generator(){pretty=true, root=root_node};
+        var generator = new Json.Generator() { pretty=true, root=root_node };
 
         try {
             generator.to_file(get_history_path());

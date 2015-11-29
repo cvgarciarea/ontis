@@ -50,7 +50,7 @@ namespace Ontis {
         public int close_height = 0;
 
         public bool mouse_in_close_button = false;
-        private static Gdk.Pixbuf null_pixbuf = Utils.get_image_from_name("text-x-generic-symbolic", 16).get_pixbuf();
+        private Gdk.Pixbuf null_pixbuf = Utils.get_image_from_name("text-x-generic-symbolic", 16).get_pixbuf();
 
         public NotebookTab(string label, int position) {
             this.label = label;
@@ -254,7 +254,7 @@ namespace Ontis {
 
         public void set_current_page(int page) {
             //if (page > this.childs.length) {
-            //    print("Error: Index < childs.length: FAILED\n");
+            //    ("Error: Index < childs.length: FAILED\n");
             //}
 
             //if (page == this.current_page) {

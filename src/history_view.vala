@@ -80,7 +80,7 @@ namespace Ontis {
                 row.add(hbox);
 
                 Gtk.CheckButton cbutton = new Gtk.CheckButton();
-                cbutton.set_label("%s %s".printf(date, time));
+                cbutton.set_label(@"$date $time");
                 hbox.pack_start(cbutton, false, false, 0);
 
                 Gtk.LinkButton lbutton = new Gtk.LinkButton.with_label(url, name + " " + url);
