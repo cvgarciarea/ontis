@@ -24,8 +24,8 @@ namespace Ontis {
         public signal void new_download(WebKit.Download download);
 
         public Ontis.Toolbar toolbar;
-        public Gtk.Button button_reload;
         public Gtk.Entry entry;
+        public Ontis.BookmarksBar bookmarks_bar;
         public Ontis.NotebookTab tab;
         public Gtk.Box hbox;
         public Ontis.WebView web_view;
@@ -46,15 +46,16 @@ namespace Ontis {
             this.toolbar = new Ontis.Toolbar();
             this.toolbar.go_back.connect(this.back);
             this.toolbar.go_forward.connect(this.forward);
+            this.toolbar.button_reload.clicked.connect(this.reload_stop);
             this.pack_start(this.toolbar, false, false, 0);
-
-            this.button_reload = this.toolbar.button_reload;
-            this.button_reload.clicked.connect(this.reload_stop);
 
             this.entry = this.toolbar.entry;
             this.entry.activate.connect(() => {
                 this.open(this.entry.get_text());
             });
+
+            this.bookmarks_bar = new Ontis.BookmarksBar();
+            this.pack_start(this.bookmarks_bar, false, false, 0);
 
             this.newtab_view = new Ontis.NewTabView();
             this.newtab_view.search.connect((text) => { this.open(text); });

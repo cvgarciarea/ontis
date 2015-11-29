@@ -19,6 +19,7 @@ SRC = src/cache.vala \
       src/utils.vala \
       src/notebook.vala \
       src/toolbar.vala \
+      src/bookmarks_bar.vala \
       src/config_view.vala \
       src/base_view.vala \
       src/window.vala

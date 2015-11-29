@@ -37,6 +37,10 @@ namespace Ontis {
         public Gtk.ToggleButton button_menu;
 
         public int state;
+        public bool favorite_page = false;
+
+        private double x = 0;
+        private double y = 0;
 
         public Toolbar() {
             this.set_orientation(Gtk.Orientation.HORIZONTAL);
@@ -68,7 +72,11 @@ namespace Ontis {
             this.pack_start(this.button_reload, false, false, 0);
 
             this.entry = new Gtk.Entry();
-            this.override_font(Pango.FontDescription.from_string("10"));
+            this.entry.override_font(Pango.FontDescription.from_string("10"));
+            this.entry.set_icon_from_pixbuf(Gtk.EntryIconPosition.SECONDARY, Utils.get_image_from_name("non-starred-symbolic", 16).get_pixbuf());
+            this.entry.set_icon_activatable(Gtk.EntryIconPosition.SECONDARY, true);
+            this.entry.set_icon_tooltip_text(Gtk.EntryIconPosition.SECONDARY, "Add to bookmarks");
+            this.entry.icon_press.connect(this.icon_pressed_cb);
             this.pack_start(this.entry, true, true, 0);
 
             this.button_menu = new Gtk.ToggleButton();
@@ -110,6 +118,69 @@ namespace Ontis {
 
             this.menu_popover = new Gtk.Popover.from_model(this.button_menu, menu);
             this.menu_popover.closed.connect(this.menu_popover_closed_cb);
+        }
+
+        private void icon_pressed_cb(Gtk.Entry entry, Gtk.EntryIconPosition position, Gdk.Event event) {
+            event.get_coords(out this.x, out this.y);
+            this.set_favorite_page(!this.favorite_page);
+        }
+
+        private void show_favorite_popover() {
+            Gdk.Pixbuf pixbuf = this.entry.secondary_icon_pixbuf;
+            Gdk.Rectangle rect = Gdk.Rectangle();
+
+            int rect_width = 2;
+            int rect_height = 2;
+            int rect_x;
+            int rect_y;
+
+            int text_area_x;
+            int text_area_y;
+            int text_area_width;
+            int text_area_height;
+            this.entry.get_text_area_size(out text_area_x, out text_area_y, out text_area_width, out text_area_height);
+
+            int entry_width = this.entry.get_allocated_width();
+            int entry_height = this.entry.get_allocated_height();
+            rect_x = entry_width - (entry_width - text_area_width) / 2 - rect_width / 2;
+            rect_y = entry_height - (entry_height - text_area_height) / 2 - rect_height / 2;
+
+            rect.x = rect_x - pixbuf.width / 2;
+            rect.y = rect_y + pixbuf.height / 2;
+            rect.width = rect_width;
+            rect.height = rect_height;
+
+            Gtk.Popover popover = new Gtk.Popover(this.entry);
+            popover.set_border_width(8);
+            popover.set_position(Gtk.PositionType.BOTTOM);
+            popover.set_pointing_to(rect);
+
+            Gtk.Grid grid = new Gtk.Grid();
+            grid.set_row_spacing(4);
+            grid.set_column_spacing(4);
+            popover.add(grid);
+
+            Gtk.Label label = new Gtk.Label(null);
+            label.set_markup("<big><b>Bookmark</b></big>");
+            label.set_xalign(0);
+            grid.attach(label, 0, 0, 2, 1);
+
+            label = new Gtk.Label("Name:");
+            grid.attach(label, 0, 1, 1, 1);
+
+            grid.attach(new Gtk.Entry(), 1, 1, 2, 1);
+            grid.attach(new Gtk.Button.with_label("Remove"), 1, 2, 1, 1);
+            grid.attach(new Gtk.Button.with_label("Done"), 2, 2, 1, 1);
+
+            popover.show_all();
+        }
+
+        public void set_favorite_page(bool favorite) {
+            this.favorite_page = favorite;
+            this.entry.set_icon_from_pixbuf(Gtk.EntryIconPosition.SECONDARY, Utils.get_image_from_name((this.favorite_page? "starred-symbolic": "non-starred-symbolic"), 16).get_pixbuf());
+            if (this.favorite_page) {
+                this.show_favorite_popover();
+            }
         }
 
         public void set_load_state(int state) {
