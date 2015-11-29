@@ -28,3 +28,7 @@ And after run with:
 Author
 ===
  * Cristian García <cristian99garcia@gmail.com>
+
+Art by:
+===
+ * Adolfo Silerio <zayronxio@gmail.com>

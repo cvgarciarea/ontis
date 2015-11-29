@@ -30,6 +30,11 @@ namespace Ontis {
             this.set_default_size(620, 420);
             this.set_title("Ontis");
 
+            try {
+                this.set_icon_from_file("data/logo.png");
+            } catch (GLib.Error error) {
+            }
+
             this.settings_manager = settings_manager;
             this.download_manager = new Ontis.DownloadManager();
 
