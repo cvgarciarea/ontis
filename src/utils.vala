@@ -86,7 +86,7 @@ namespace Ontis {
 
     public string search_in_google(string search) {
         string text = search.replace(" ", "+");
-        return @"https://www.google.com/?#q=$text";
+        return @"https://www.google.com/search?q=$text";
     }
 
     public string parse_uri(string uri) {
@@ -96,7 +96,7 @@ namespace Ontis {
 
         foreach (string _char in search_chars) {
             if (_char in uri) {
-                return search_in_google(uri);
+                return Ontis.search_in_google(uri);
             }
         }
 
