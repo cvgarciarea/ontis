@@ -25,7 +25,7 @@ SRC = src/consts.vala\
       src/base_view.vala \
       src/window.vala
 
-OPTIONS = -X -lm
+OPTIONS = -X -lm -X -w
 
 BIN = ontis
 

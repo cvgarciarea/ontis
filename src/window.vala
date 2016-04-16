@@ -187,7 +187,7 @@ namespace Ontis {
 
 
             int current = 0;
-            /*foreach (Gtk.Widget widget in this.notebook.childs) {
+            foreach (Gtk.Widget widget in this.notebook.get_childs()) {
                 Ontis.View view = (widget as Ontis.View);
                 if (view.get_mode() == mode) {
                     this.notebook.set_current_page(current);
@@ -195,7 +195,7 @@ namespace Ontis {
                 }
 
                 current ++;
-            }*/
+            }
 
             this.new_page(url);
         }

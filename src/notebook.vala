@@ -33,7 +33,6 @@ namespace Ontis {
         public Ontis.WidgetGeometry geom;
         public string label = "";
         public Gdk.Pixbuf? pixbuf = null;
-        public int[]? special_points = null;
         public ulong? connect_id = null;
 
         public Ontis.TabState state = Ontis.TabState.NORMAL;
@@ -138,7 +137,6 @@ namespace Ontis {
             this.index = index;
             this.widget = widget;
             this.pixbuf = Ontis.get_empty_tab_icon();
-            this.special_points = { 0, 100, 85, 15 };
         }
 
         public void set_title(string label) {
@@ -379,7 +377,6 @@ namespace Ontis {
                 this.get_widget_color(tab, out r, out g, out b);
                 context.set_source_rgb(r, g, b);
 
-                int[] points = tab.special_points;
                 int index = tab.index;
                 double start_x = tab_width * (index - 1);
 
@@ -584,6 +581,10 @@ namespace Ontis {
 
                 case Ontis.TabState.DRAGGING:
                     Ontis.get_rgb(Ontis.Colors.TAB_SELECTED_BG_COLOR, out r, out g, out b);
+                    break;
+
+                default:
+                    r = g = b = 0;
                     break;
             }
         }

@@ -44,7 +44,7 @@ namespace Ontis {
                                  Gdk.EventMask.BUTTON_RELEASE_MASK);
 
             this.label = new Gtk.Label("100 %");
-            this.label.override_font(Pango.FontDescription.from_string("10"));
+            Ontis.apply_theme(this.label, "{ font-size: 10 }");
             this.pack_start(this.label, false, false, 0);
         }
 
@@ -139,7 +139,7 @@ namespace Ontis {
         public DownPanel() {
             this.label = new Gtk.Label(null);
             this.label.set_ellipsize(Pango.EllipsizeMode.END);
-            this.label.override_font(Pango.FontDescription.from_string("10"));
+            Ontis.apply_theme(this.label, "{ font-size: 10 }");
             this.pack_start(this.label, false, true, 0);
 
             this.zoom_scale = new ZoomScale();

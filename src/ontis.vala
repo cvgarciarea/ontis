@@ -48,56 +48,22 @@ public class App: Gtk.Application {
     }
 
     public void add_actions() {
-        GLib.SimpleAction action = new GLib.SimpleAction("new-tab", null);
-        action.activate.connect(this.new_tab);
-        this.add_action(action);
-
-        action = new GLib.SimpleAction("new-window", null);
-        action.activate.connect(this.new_window);
-        this.add_action(action);
-
-        action = new GLib.SimpleAction("close-tab", null);
-        action.activate.connect(this.close_tab);
-        this.add_action(action);
-
-        action = new GLib.SimpleAction("history", null);
-        action.activate.connect(this.show_history);
-        this.add_action(action);
-
-        action = new GLib.SimpleAction("downloads", null);
-        action.activate.connect(this.show_downloads);
-        this.add_action(action);
-
-        action = new GLib.SimpleAction("search", null);
-        action.activate.connect(this.turn_search_bar);
-        this.add_action(action);
-
-        action = new GLib.SimpleAction("settings", null);
-        action.activate.connect(this.show_settings);
-        this.add_action(action);
-
-        action = new GLib.SimpleAction("exit", null);
-        action.activate.connect(this.close_all);
-        this.add_action(action);
+        this.set_accels_for_action("app.new-tab", { "<Primary>T" });
+        this.set_accels_for_action("app.new-window", { "<Primary>N" });
+        this.set_accels_for_action("app.close-tab", { "<Primary>W" });
+        this.set_accels_for_action("app.history", { "<Primary>H" });
+        this.set_accels_for_action("app.downloads", { "<Primary>D" });
+        this.set_accels_for_action("app.downloads", { "<primary>F" });
+        this.set_accels_for_action("app.settings", { });
+        this.set_accels_for_action("app.exit", { });
 
         for (int i=1; i<=10; i++) {
-            action = new GLib.SimpleAction("go-back-" + i.to_string(), null);
-            action.activate.connect(this.go_back);
-            this.add_action(action);
+            this.set_accels_for_action("app.go-back-" + i.to_string(), { });
         }
 
         for (int i=1; i<=10; i++) {
-            action = new GLib.SimpleAction("go-forward-" + i.to_string(), null);
-            action.activate.connect(this.go_forward);
-            this.add_action(action);
+            this.set_accels_for_action("app.go-forward-" + i.to_string(), { });
         }
-
-        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.t, Gdk.ModifierType.CONTROL_MASK), "app.new-tab", null);
-        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.n, Gdk.ModifierType.CONTROL_MASK), "app.new-window", null);
-        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.w, Gdk.ModifierType.CONTROL_MASK), "app.close-tab", null);
-        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.h, Gdk.ModifierType.CONTROL_MASK), "app.history", null);
-        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.d, Gdk.ModifierType.CONTROL_MASK), "app.downloads", null);
-        this.add_accelerator(Gtk.accelerator_name(Gdk.Key.f, Gdk.ModifierType.CONTROL_MASK), "app.search", null);
     }
 
     public Ontis.Window get_current_window() {

@@ -129,8 +129,8 @@ namespace Ontis {
             this.listbox.add(row);
 
             Gtk.Box hbox = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
-            hbox.set_margin_left(10);
-            hbox.set_margin_right(10);
+            hbox.set_margin_start(10);
+            hbox.set_margin_end(10);
             row.add(hbox);
 
             Ontis.DownloadProgressCircle circle = new Ontis.DownloadProgressCircle();

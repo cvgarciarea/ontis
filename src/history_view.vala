@@ -29,15 +29,15 @@ namespace Ontis {
             this.listbox.set_selection_mode(Gtk.SelectionMode.NONE);
             this.scroll.add(this.listbox);
 
-            this.update.connect(this.update_cb);
-            this.search_entry.changed.connect(this.update_cb);
+            this.update.connect(() => { this.update_idle_add(); });
+            this.search_entry.changed.connect(() => { this.update_idle_add(); });
         }
 
-        public void update_cb(GLib.Object widget) {
-            GLib.Idle.add(() => { this.update2(); return false; });
+        public void update_idle_add() {
+            GLib.Idle.add(() => { this.update_list(); return false; });
         }
 
-        public void update2() { //string search="") {
+        public void update_list() { //string search="") {
             string search = this.search_entry.get_text().down();
 
             foreach (Gtk.Widget lrow in this.listbox.get_children()) {

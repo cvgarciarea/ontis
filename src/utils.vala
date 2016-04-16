@@ -216,4 +216,16 @@ namespace Ontis {
         g = colors[1];
         b = colors[2];
     }
+    
+    public void apply_theme(Gtk.Widget widget, string theme) {
+        Gtk.CssProvider style_provider = new Gtk.CssProvider();
+        try {
+            style_provider.load_from_data(theme, theme.length);
+        } catch (GLib.Error error) {
+            return;
+        }
+
+        Gtk.StyleContext context = widget.get_style_context();
+        context.add_provider(style_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+    }
 }
