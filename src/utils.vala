@@ -16,13 +16,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-namespace Utils {
-
-    public const string URL_NEWTAB = "ontis://newtab";
-    public const string URL_HISTORY = "ontis://history";
-    public const string URL_DOWNLOADS = "ontis://downloads";
-    public const string URL_SETTINGS = "ontis://settings";
-    public const string[] SPECIAL_URLS = { URL_NEWTAB, URL_HISTORY, URL_DOWNLOADS, URL_SETTINGS };
+namespace Ontis {
 
     public enum LoadState {
         LOADING,
@@ -92,7 +86,7 @@ namespace Utils {
 
     public string search_in_google(string search) {
         string text = search.replace(" ", "+");
-        return @"https://www.google.com.uy/?#q=$text";
+        return @"https://www.google.com/?#q=$text";
     }
 
     public string parse_uri(string uri) {
@@ -166,8 +160,8 @@ namespace Utils {
         string dir = get_history_path();
         Json.Parser parser = new Json.Parser();
         try {
-        	parser.load_from_file(dir);
-	        return parser.get_root().get_array();
+            parser.load_from_file(dir);
+            return parser.get_root().get_array();
         } catch {
             return new Json.Array();
         }
@@ -180,12 +174,12 @@ namespace Utils {
         GLib.FileInfo info;
 
         try {
-    		info = file.query_info("standard::icon", 0);
-    	} catch (GLib.Error e) {
-    	    return null_pixbuf.copy();
-    	}
+            info = file.query_info("standard::icon", 0);
+        } catch (GLib.Error e) {
+            return null_pixbuf.copy();
+        }
 
-		GLib.Icon icon = info.get_icon();
+        GLib.Icon icon = info.get_icon();
 
         string[] icon_names = icon.to_string().split(" ");
         Gtk.IconInfo icon_info = icon_theme.choose_icon(icon_names, size, Gtk.IconLookupFlags.GENERIC_FALLBACK);
@@ -211,5 +205,15 @@ namespace Utils {
             }
         }
         size = bytes;
+    }
+
+    public Gdk.Pixbuf get_empty_tab_icon() {
+        return Ontis.get_image_from_name("text-x-generic-symbolic", 16).get_pixbuf();
+    }
+
+    public void get_rgb(double[] colors, out double r, out double g, out double b) {
+        r = colors[0];
+        g = colors[1];
+        b = colors[2];
     }
 }

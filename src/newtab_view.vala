@@ -44,7 +44,7 @@ namespace Ontis {
             this.button_go.clicked.connect(() => { this.entry.activate(); });
             this.pack_start(this.button_go, false, false, 0);
 
-            Gtk.Image icon = Utils.get_image_from_name("go-next-symbolic");
+            Gtk.Image icon = Ontis.get_image_from_name("go-next-symbolic");
             this.button_go.add(icon);
             icon.show();
 

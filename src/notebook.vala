@@ -1,7 +1,4 @@
 /*
-Compile with:
-    valac --pkg gtk+-3.0 notebook.vala
-
 Copyright (C) 2015, Cristian García <cristian99garcia@gmail.com>
 
 This program is free software; you can redistribute it and/or modify
@@ -21,53 +18,141 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 namespace Ontis {
 
-    public class Tab: GLib.Object {
-
-        public signal void redraw();
-
-        public int x = 0;
-        public int y = 0;
-        public int width = 0;
-        public int height = 0;
-
-        public bool selected = false;
-        public bool mouse_in = false;
-
-        public Tab() {
-        }
-
+    public struct WidgetGeometry {
+        public double x;
+        public double y;
+        public double width;
+        public double height;
     }
 
-    public class NotebookTab: Tab {
+    public class BaseWidget: GLib.Object {
 
+        public signal void redraw();
+        public signal void state_changed(Ontis.TabState state);
+
+        public Ontis.WidgetGeometry geom;
         public string label = "";
-        public int position = 0;
         public Gdk.Pixbuf? pixbuf = null;
+        public int[]? special_points = null;
+        public ulong? connect_id = null;
 
-        public int close_x = 0;
-        public int close_y = 0;
-        public int close_width = 0;
-        public int close_height = 0;
+        public Ontis.TabState state = Ontis.TabState.NORMAL;
 
-        public bool mouse_in_close_button = false;
-        private Gdk.Pixbuf null_pixbuf = Utils.get_image_from_name("text-x-generic-symbolic", 16).get_pixbuf();
+        public BaseWidget(double x = 0, double y = 0, double width = 1, double height = 1) {
+            this.geom = Ontis.WidgetGeometry() {
+                x = x,
+                y = y,
+                width = width,
+                height = height
+            };
+        }
 
-        public NotebookTab(string label, int position) {
+        public void set_position(int? x = null, int? y = null) {
+            if (x != null) {
+                this.geom.x = x;
+            }
+
+            if (y != null) {
+                this.geom.y = y;
+            }
+
+            this.redraw();
+        }
+
+        public void set_size(int? width = null, int? height = null) {
+            if (width != null) {
+                this.geom.width = width;
+            }
+
+            if (height != null) {
+                this.geom.height = height;
+            }
+
+            this.redraw();
+        }
+
+        public void set_geom(int? x = null, int? y = null, int? width = null, int? height = null) {
+            if (x != null) {
+                this.geom.x = x;
+            }
+
+            if (y != null) {
+                this.geom.y = y;
+            }
+
+            if (width != null) {
+                this.geom.width = width;
+            }
+
+            if (height != null) {
+                this.geom.height = height;
+            }
+
+            this.redraw();
+        }
+
+        public void set_state(Ontis.TabState state) {
+            this.state = state;
+            this.redraw();
+            this.state_changed(state);
+        }
+
+        public Ontis.TabState get_state() {
+            return this.state;
+        }
+
+        public void set_selected(bool selected) {
+            if (selected && this.get_state() != Ontis.TabState.SELECTED) {
+                this.set_state(Ontis.TabState.SELECTED);
+            } else if (!selected && this.get_state() == Ontis.TabState.SELECTED) {
+                this.set_state(Ontis.TabState.NORMAL);
+            }
+        }
+
+        public void set_mouse_over(bool mouse_over) {
+            Ontis.TabState state = this.get_state();
+            if (mouse_over && state != Ontis.TabState.MOUSE_OVER && state != Ontis.TabState.SELECTED) {
+                this.set_state(Ontis.TabState.MOUSE_OVER);
+            } else if (!mouse_over && state == Ontis.TabState.MOUSE_OVER) {
+                this.set_state(Ontis.TabState.NORMAL);
+            }
+        }
+
+        public void set_connect_id(ulong id) {
+            this.connect_id = id;
+        }
+
+        public void destroy() {
+            this.disconnect(this.connect_id);
+            this.connect_id = null;
+        }
+    }
+
+    public class Tab: Ontis.BaseWidget {
+
+        public int index = 0;
+        public Gtk.Widget? widget = null;
+
+        public Tab(string label, int index, Gtk.Widget widget) {
             this.label = label;
-            this.position = position;
-            this.pixbuf = this.null_pixbuf.copy();
+            this.index = index;
+            this.widget = widget;
+            this.pixbuf = Ontis.get_empty_tab_icon();
+            this.special_points = { 0, 100, 85, 15 };
         }
 
         public void set_title(string label) {
             this.label = label;
+            this.redraw();
         }
 
         public string get_title() {
             return this.label;
         }
 
-        public void set_pixbuf(Gdk.Pixbuf? pixbuf) {
-            this.pixbuf = (pixbuf != null)? pixbuf: this.null_pixbuf.copy();
+        public void set_pixbuf(Gdk.Pixbuf? pixbuf = null) {
+            this.pixbuf = (pixbuf != null)? pixbuf: Ontis.get_empty_tab_icon();
+            this.redraw();
         }
 
         public Gdk.Pixbuf get_pixbuf() {
@@ -75,25 +160,432 @@ namespace Ontis {
         }
     }
 
-    public class NotebookAdd: Tab {
+    public class Button: Ontis.BaseWidget {
 
-        public NotebookAdd() {
-            this.width = 30;
+        public signal void clicked();
+
+        public Button() {
+            this.state_changed.connect(this.changed_cb);
+        }
+
+        private void changed_cb(Ontis.BaseWidget self, Ontis.TabState state) {
+            if (state == Ontis.TabState.SELECTED) {
+                this.set_state(Ontis.TabState.NORMAL);
+                this.clicked();
+            }
         }
     }
 
-    public class NotebookButton: GLib.Object {
+    public class CloseButton: Ontis.Button {
 
-        public int x = 0;
-        public int y = 0;
-        public int width = 0;
-        public int height = 0;
-        public string label = "";
+        public CloseButton() {
+            this.label = "x"; // FIXME: Replace it with a pixbuf
+            this.set_geom(-31, 2, 30, 25);
+        }
+    }
 
-        public bool mouse_in = false;
+    public class MaximizeButton: Ontis.Button {
 
-        public NotebookButton(string label) {
-            this.label = label;
+        public MaximizeButton() {
+            this.label = "-"; // FIXME: Replace it with a pixbuf;
+            this.set_geom(-62, 2, 30, 25);
+        }
+    }
+
+    public class MinimizeButton: Ontis.Button {
+
+        public MinimizeButton() {
+            this.label = "_"; // FIXME: Replace it with a pixbuf;
+            this.set_geom(-93, 2, 30, 25);
+        }
+    }
+
+    public class NewTabButton: Ontis.Button {
+
+        public NewTabButton() {
+            this.set_geom(0, 0, 20, 15);
+        }
+    }
+
+    public class TabBox: Gtk.DrawingArea {
+
+        public signal void new_tab();       // When user click on "new tab"
+        public signal void page_added();    // When a new tab is added
+        public signal void page_removed();  // When a tab is removed
+        public signal void page_switched(); // When the current tab is changed
+        public signal void minimize();
+        public signal void turn_maximize();
+        public signal void close();
+
+        private Ontis.Tab[] tabs;
+
+        public Ontis.NewTabButton new_tab_button;
+        public Ontis.CloseButton close_button;
+        public Ontis.MaximizeButton maximize_button;
+        public Ontis.MinimizeButton minimize_button;
+
+        public TabBox() {
+            this.tabs = { };
+
+            this.new_tab_button = new Ontis.NewTabButton();
+            this.new_tab_button.redraw.connect(() => { this.update(); });
+            this.new_tab_button.clicked.connect(() => { this.new_tab(); });
+
+            this.close_button = new Ontis.CloseButton();
+            this.close_button.redraw.connect(() => { this.update(); });
+            this.close_button.clicked.connect(() => { this.close(); });
+
+            this.maximize_button = new Ontis.MaximizeButton();
+            this.maximize_button.redraw.connect(() => { this.update(); });
+            this.maximize_button.clicked.connect(() => { this.turn_maximize(); });
+
+            this.minimize_button = new Ontis.MinimizeButton();
+            this.minimize_button.redraw.connect(() => { this.update(); });
+            this.minimize_button.clicked.connect(() => { this.minimize(); });
+
+            this.set_size_request(1, 35);
+            this.add_events(Gdk.EventMask.BUTTON_PRESS_MASK |
+                            Gdk.EventMask.BUTTON_RELEASE_MASK |
+                            Gdk.EventMask.POINTER_MOTION_MASK |
+                            Gdk.EventMask.LEAVE_NOTIFY_MASK);
+
+            this.draw.connect(this.draw_cb);
+            this.motion_notify_event.connect(this.pointer_motion_cb);
+            this.button_press_event.connect(this.button_press_cb);
+            this.button_release_event.connect(this.button_release_cb);
+            this.leave_notify_event.connect(this.leave_cb);
+        }
+
+        private bool draw_cb(Gtk.Widget self, Cairo.Context context) {
+            this.draw_background(context);
+            this.draw_widgets(context);
+            return false;
+        }
+
+        private bool button_press_cb(Gtk.Widget self, Gdk.EventButton event) {
+            Ontis.Tab? tab = this.get_tab_at_point(event.x, event.y);
+
+            if (tab != null) {
+                // Switch tabs when mouse button is pressed
+                if (tab.get_state() == Ontis.TabState.MOUSE_OVER) {
+                    foreach (Ontis.Tab ctab in this.tabs) {
+                        ctab.set_selected(ctab == tab);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private bool button_release_cb(Gtk.Widget self, Gdk.EventButton event) {
+            // Check if is dragging
+            Ontis.Tab? dragging_tab = null;
+
+            foreach (Ontis.Tab tab in this.tabs) {
+                if (tab.get_state() == Ontis.TabState.DRAGGING) {
+                    dragging_tab = tab;
+                    break;
+                }
+            }
+
+            if (dragging_tab == null) {
+                // Active widgets when the mouse button is  released
+                this.new_tab_button.set_selected(this.new_tab_button.get_state() == Ontis.TabState.MOUSE_OVER);
+                foreach (Ontis.Button button in this.get_buttons()) {
+                    button.set_selected(button.get_state() == Ontis.TabState.MOUSE_OVER);
+                }
+            }
+
+            return false;
+        }
+
+        private bool pointer_motion_cb(Gtk.Widget self, Gdk.EventMotion event) {
+            Ontis.Tab? tab = this.get_tab_at_point(event.x, event.y);
+
+            Gtk.Allocation alloc;
+            this.get_allocation(out alloc);
+
+            if (tab != null) {
+                foreach (Ontis.Tab ctab in this.tabs) {
+                    if (ctab.get_state() != Ontis.TabState.SELECTED) { // FIXME: and when is dragging?
+                        ctab.set_mouse_over(ctab == tab);
+                    }
+                }
+            } else {
+                // Set all tabs to normal
+                foreach (Ontis.Tab ctab in this.tabs) {
+                    ctab.set_mouse_over(false);
+                }
+
+                // First check for "New Tab button"
+                double x = (this.get_tab_width() * this.tabs.length) + this.new_tab_button.geom.x;
+                double y = alloc.height / 2 - this.new_tab_button.geom.height / 4;
+                double width = this.new_tab_button.geom.width + 10;
+                double height = this.new_tab_button.geom.height;
+
+                this.new_tab_button.set_mouse_over((event.x > x && event.x < x + width &&
+                                                    event.y > y && event.y < y + height));
+
+                // Now check for other widgets (no tabs and no button new tab)
+                foreach (Ontis.Button button in this.get_buttons()) {
+                    x = alloc.width + button.geom.x;
+                    y = button.geom.y;
+                    width = button.geom.width;
+                    height = button.geom.height;
+
+                    button.set_mouse_over((event.x > x && event.x < x - width &&
+                                           event.y > y && event.y < y + height));
+                }
+            }
+
+            return false;
+        }
+
+        private bool leave_cb(Gtk.Widget self, Gdk.EventCrossing event) {
+            foreach (Ontis.Tab ctab in this.tabs) {
+                ctab.set_mouse_over(false);
+            }
+
+            return false;
+        }
+
+        private void draw_background(Cairo.Context context) {
+            Gtk.Allocation alloc;
+            this.get_allocation(out alloc);
+
+            double r, g, b;
+            Ontis.get_rgb(Ontis.Colors.BG_COLOR, out r, out g, out b);
+
+            context.set_source_rgba(r, g, b, 0.5);
+            context.rectangle(0, 0, alloc.width, alloc.height);
+            context.fill();
+        }
+
+        private void draw_widgets(Cairo.Context context) {
+            this.draw_tabs(context);
+            this.draw_buttons(context);
+        }
+
+        private void draw_tabs(Cairo.Context context) {
+            Gtk.Allocation alloc;
+            this.get_allocation(out alloc);
+
+            int sheight = alloc.height;
+            double tab_width = this.get_tab_width();
+
+            foreach (Ontis.Tab tab in this.tabs) {
+                // Render poligon
+                double r, g, b;
+                this.get_widget_color(tab, out r, out g, out b);
+                context.set_source_rgb(r, g, b);
+
+                int[] points = tab.special_points;
+                int index = tab.index;
+                double start_x = tab_width * (index - 1);
+
+                tab.geom.x = start_x;
+                tab.geom.y = 10;
+                tab.geom.width = tab_width;
+                tab.geom.height = sheight - tab.geom.y;
+
+                double p1 = start_x;
+                double p2 = start_x + tab_width;
+                double p3 = start_x + tab_width - 15;
+                double p4 = start_x + 15;
+
+                context.move_to(p1, sheight);
+                context.line_to(p2, sheight);
+                context.line_to(p3, tab.geom.y);
+                context.line_to(p4, tab.geom.y);
+                context.fill();
+
+                // Render pixbuf
+                double px = start_x + 15;
+                double py = tab.geom.y + tab.geom.height / 2 - tab.pixbuf.height / 2;
+                Gdk.cairo_set_source_pixbuf(context, tab.pixbuf, px, py);
+                context.paint();
+
+                // Render label
+                if (tab.get_state() == Ontis.TabState.SELECTED) {
+                    Ontis.get_rgb(Ontis.Colors.TAB_SELECTED_LABEL_COLOR, out r, out g, out b);
+                } else {
+                    Ontis.get_rgb(Ontis.Colors.TAB_LABEL_COLOR, out r, out g, out b);
+                }
+                
+                context.set_source_rgb(r, g, b);
+
+                Cairo.TextExtents extents;
+                context.text_extents(tab.label, out extents);
+
+                double max_label_width = tab.geom.width - tab.pixbuf.width - 45;
+                double x_label = start_x + tab.pixbuf.width + 20;
+                double y_label = tab.geom.y + tab.geom.height / 2 + extents.height / 2 - 2;
+
+                context.move_to(x_label, y_label);
+                context.set_font_size(Ontis.Consts.TAB_LABEL_SIZE);
+                context.select_font_face(Ontis.Consts.TAB_LABEL_FONT, Cairo.FontSlant.NORMAL, Cairo.FontWeight.NORMAL);
+
+                if (extents.width <= max_label_width) {
+                    context.show_text(tab.label);
+                } else {
+                    string current_text = "";
+                    for (int i=1; i <= tab.label.length; i++) {
+                        string sub_text = tab.label.slice(0, i) + "...";
+                        Cairo.TextExtents sub_extents;
+                        context.text_extents(sub_text, out sub_extents);
+
+                        if (sub_extents.width > max_label_width) {
+                            context.show_text(current_text);
+                            break;
+                        }
+                        current_text = sub_text;
+                    }
+                }
+            }
+        }
+
+        private void draw_buttons(Cairo.Context context) {
+            Gtk.Allocation alloc;
+            this.get_allocation(out alloc);
+
+            double r, g, b;
+
+            foreach (Ontis.Button button in this.get_buttons()) {
+                double x, y, width, height;
+                x = button.geom.x;
+                y = button.geom.y;
+                width = button.geom.width;
+                height = button.geom.height;
+
+                this.get_widget_color(button, out r, out g, out b);
+
+                context.set_source_rgb(r, g, b);
+                context.rectangle(alloc.width + x, y, width, height);
+                context.fill();
+            }
+
+            double start_x = this.get_tab_width() * this.tabs.length;
+            double start_y = alloc.height / 2 - this.new_tab_button.geom.height / 4;
+            double border = 10;
+            double width = this.new_tab_button.geom.width;
+            double height = this.new_tab_button.geom.height;
+
+            this.get_widget_color(this.new_tab_button, out r, out g, out b);
+            context.set_source_rgb(r, g, b);
+
+            context.move_to(start_x + border, start_y + height);
+            context.line_to(start_x + border + width, start_y + height);
+            context.line_to(start_x + width, start_y);
+            context.line_to(start_x, start_y);
+            context.fill();
+        }
+
+        private void state_changed_cb(Ontis.TabState state) {
+            if (state == Ontis.TabState.SELECTED) {
+                this.page_switched();
+            }
+        }
+
+        public void update() {
+            GLib.Idle.add(() => {
+                this.queue_draw();
+                return false;
+            });
+        }
+
+        public Ontis.Tab add_tab(string label, int index, Gtk.Widget widget) {
+            Ontis.Tab tab = new Ontis.Tab(label, index, widget);
+            tab.set_connect_id(tab.redraw.connect(() => { this.update(); }));
+            tab.state_changed.connect(this.state_changed_cb);
+            this.tabs += tab;
+            this.update();
+            return tab;
+        }
+
+        public void remove_tab(Ontis.Tab tab) {
+            Ontis.Tab[] tabs = { };
+            foreach (Ontis.Tab ptab in this.tabs) {
+                if (ptab != tab) {
+                    tabs += tab;
+                }
+            }
+
+            tab.destroy();
+
+            this.tabs = tabs;
+            this.update();
+        }
+
+        public Ontis.Tab[] get_tabs() {
+            return this.tabs;
+        }
+
+        public double get_tab_width() {
+            Gtk.Allocation alloc;
+            this.get_allocation(out alloc);
+
+            int swidth, sheight;
+            swidth = alloc.width;
+            sheight = alloc.height;
+
+            double space = swidth - 150;
+            int ctabs = this.tabs.length;
+            double tab_width = space / ctabs;
+
+            if (tab_width > Ontis.Consts.MAX_TAB_WIDTH) {
+                tab_width = Ontis.Consts.MAX_TAB_WIDTH;
+            }
+
+            return tab_width;
+        }
+
+        public Ontis.Tab? get_tab_at_point(double px, double py) {
+            double tx, ty, twidth, theight;
+            Ontis.TabState state;
+
+            Ontis.Tab? tab = null;
+
+            foreach (Ontis.Tab ctab in this.tabs) {
+                tx = ctab.geom.x;
+                ty = ctab.geom.y;
+                twidth = ctab.geom.width;
+                theight = ctab.geom.height;
+                state = ctab.get_state();
+
+                if (px > tx && px < tx + twidth &&
+                    py > ty && py < ty + theight) {
+                    // The pointer is over
+                    tab = ctab;  // FIXME: And, when a tab is dragging?
+                    break;
+                }
+            }
+
+            return tab;
+        }
+
+        public Ontis.Button[] get_buttons() {
+            Ontis.Button[] buttons = { this.minimize_button, this.maximize_button, this.close_button };
+            return buttons;
+        }
+
+        public void get_widget_color(Ontis.BaseWidget widget, out double r, out double g, out double b) {
+            switch (widget.get_state()) {
+                case Ontis.TabState.NORMAL:
+                    Ontis.get_rgb(Ontis.Colors.TAB_BG_COLOR, out r, out g, out b);
+                    break;
+
+                case Ontis.TabState.MOUSE_OVER:
+                    Ontis.get_rgb(Ontis.Colors.TAB_MOUSE_OVER_BG_COLOR, out r, out g, out b);
+                    break;
+
+                case Ontis.TabState.SELECTED:
+                    Ontis.get_rgb(Ontis.Colors.TAB_SELECTED_BG_COLOR, out r, out g, out b);
+                    break;
+
+                case Ontis.TabState.DRAGGING:
+                    Ontis.get_rgb(Ontis.Colors.TAB_SELECTED_BG_COLOR, out r, out g, out b);
+                    break;
+            }
         }
     }
 
@@ -104,155 +596,118 @@ namespace Ontis {
         public signal void page_removed();  // When a tab is removed
         public signal void page_switched(); // When the current tab is changed
         public signal void minimize();
-        public signal void turn_maxmizie();
+        public signal void turn_maximize();
         public signal void close();
 
-        public double[] bg_color = { 0, 0, 0 };//{ 0.9215686274509803, 0.9372549019607843, 0.9490196078431372 };
-
-        public double[] tab_bg_color = { 0.3764705882352941, 0.49019607843137253, 0.5450980392156862 };
-        public double[] tab_selected_bg_color = { 0.9215686274509803, 0.9372549019607843, 0.9490196078431372 };
-        public double[] tab_mouse_in_bg_color = { 0.5568627450980392, 0.6352941176470588, 0.6784313725490196 };
-
-        public double[] tab_label_color = { 0.9215686274509803, 0.9372549019607843, 0.9490196078431372 };
-        public double[] tab_selected_label_color = { 0.0, 0.0, 0.0 };
-
-        public double[] tab_bg_close_button = { 0.5568627450980392, 0.6352941176470588, 0.6784313725490196 };
-        public double[] tab_mouse_in_bg_close_button = { 0.9176470588235294, 0.592156862745098, 0.5568627450980392 };
-
-        public double[] button_bg_color = { 0.3764705882352941, 0.49019607843137253, 0.5450980392156862 };
-        public double[] button_mouse_in_bg_color = { 0.5568627450980392, 0.6352941176470588, 0.6784313725490196 };
-        public double[] button_label_color = { 1, 1, 1 };
-
-        private int mouse_x = 0;
-        private int mouse_y = 0;
-
-        public int tab_label_size = 15;
-        public string tab_label_font = "DejaVu Sans";
-        public int default_tab_width = 200;
-        public int buttons_space = 70;
-        public bool show_buttons = false;
-        public int top_space = 15;
-
-        private bool mouse_pressed = false;
-
-        public Gtk.DrawingArea switcher;
+        public Ontis.TabBox tabbox;
         public Gtk.Box box;
-
         public Gtk.Widget? current_child = null;
-        public int n_pages = 0;
-        public int? current_page = null;
+        public int current_page = 0;
 
-        public GLib.List<Gtk.Widget> childs;
-        public GLib.List<NotebookTab> tabs;
+        private Gtk.Widget[] childs;
 
-        public NotebookAdd tab_add;
+        public class Notebook() {
+            this.childs = { };
 
-        public NotebookButton button_minimize;
-        public NotebookButton button_maximize;
-        public NotebookButton button_close;
-
-        public Notebook() {
             this.set_orientation(Gtk.Orientation.VERTICAL);
 
-            this.childs = new GLib.List<Gtk.Widget>();
-            this.tabs = new GLib.List<NotebookTab>();
-
-            this.tab_add = new NotebookAdd();
-
-            this.button_minimize = new NotebookButton("_");
-            this.button_maximize = new NotebookButton("-");
-            this.button_close = new NotebookButton("x");
-
-            this.switcher = new Gtk.DrawingArea();
-            this.switcher.set_size_request(1, 45);
-            this.switcher.draw.connect(this.redraw_switcher);
-            this.pack_start(this.switcher, false, false, 0);
-
-            this.switcher.add_events(Gdk.EventMask.POINTER_MOTION_MASK |
-                                     Gdk.EventMask.BUTTON_PRESS_MASK |
-                                     Gdk.EventMask.BUTTON_RELEASE_MASK);
-
-            this.switcher.motion_notify_event.connect(this.motion_notify_cb);
-            this.switcher.button_press_event.connect(this.button_press_cb);
-            this.switcher.button_release_event.connect(this.button_release_cb);
+            this.tabbox = new Ontis.TabBox();
+            this.tabbox.new_tab.connect(() => { this.new_tab(); });
+            this.tabbox.page_added.connect(() => { this.page_added(); });
+            this.tabbox.page_removed.connect(() => { this.page_removed(); });
+            this.tabbox.page_switched.connect(() => { this.page_switched(); });
+            this.tabbox.minimize.connect(() => { this.minimize(); });
+            this.tabbox.turn_maximize.connect(() => { this.turn_maximize(); });
+            this.tabbox.close.connect(() => { this.close(); });
+            this.pack_start(this.tabbox, false, false, 0);
 
             this.box = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
             this.pack_start(this.box, true, true, 0);
-            this.show_all();
+
+            this.page_switched.connect(this.page_switched_cb);
         }
 
-        private bool motion_notify_cb(Gtk.Widget switcher, Gdk.EventMotion event) {
-            int x = (int)event.x;
-            int y = (int)event.y - this.top_space;
-            this.mouse_x = x;
-            this.mouse_y = y;
-            this.update_switcher();
-
-            return this.mouse_pressed;
-        }
-
-        private bool button_press_cb(Gtk.Widget switcher, Gdk.EventButton event) {
-            // For drag and drop
-            if (event.button != 1 || this.tabs.length() == 0) {
-                return false;
-            }
-
-            //int x = (int)event.x;
-            //int y = (int)event.y;
-            bool on_tab = false;
-
-            foreach (NotebookTab tab in this.tabs) {
-                if (tab.mouse_in) {
-                    on_tab = true;
+        private void page_switched_cb() {
+            int i = 0;
+            foreach (Ontis.Tab tab in this.tabbox.get_tabs()) {
+                if (tab.get_state() == Ontis.TabState.SELECTED) {
                     break;
                 }
+
+                i++;
             }
 
-            this.mouse_pressed = on_tab;
-            return this.mouse_pressed;
+            Gtk.Widget widget = this.childs[i];
+            this.set_current_page_from_widget(widget);
         }
 
-        private bool button_release_cb(Gtk.Widget switcher, Gdk.EventButton event) {
-            this.mouse_pressed = false;
+        public Ontis.Tab append_page(string label, Gtk.Widget widget) {
+            this.childs += widget;
 
-            int current = 0;
+            if (current_child == null) {
+                this.set_current_page_from_widget(widget);
+            }
 
-            foreach (NotebookTab tab in this.tabs) {
-                if (tab.mouse_in && !tab.mouse_in_close_button) {
-                    this.set_current_page(current);
-                    return true;
-                } else if (tab.mouse_in && tab.mouse_in_close_button) {
-                    this.remove_page(current);
-                    return true;
+            return this.tabbox.add_tab(label, this.childs.length, widget);
+        }
+
+        public void remove_page(int index) {
+            if (this.get_n_pages() == 0) {
+                return;
+            }
+
+            int current1 = 0;
+            int current2 = 0;
+            int current3 = 1;
+
+            foreach (Ontis.Tab tab in this.tabbox.get_tabs()) {
+                if (current1 == index) {
+                    this.tabbox.remove_tab(tab);
+                    break;
                 }
 
-                current ++;
+                current1 ++;
             }
 
-            if (this.tab_add.mouse_in) {
-                this.new_tab();
-                return true;
+            Gtk.Widget[] childs = { };
+            foreach (Gtk.Widget widget in this.childs) {
+                if (current2 != index) {
+                    childs += widget;
+                }
+
+                current2 ++;
             }
 
-            if (this.button_minimize.mouse_in) {
-                this.minimize();
-                return true;
+            this.childs = childs;
+
+            foreach (Ontis.Tab tab in this.tabbox.get_tabs()) {
+                tab.index = current3;
+                current3 ++;
             }
 
-            if (this.button_maximize.mouse_in) {
-                this.turn_maxmizie();
-                return true;
+            if (index == this.get_current_page()) {
+                if (this.get_n_pages() >= index) {
+                    this.set_current_page();
+                } else if (this.get_n_pages() < index && this.get_n_pages() >= 1) {
+                    this.set_current_page(index - 1);
+                }
             }
 
-            if (this.button_close.mouse_in) {
-                this.close();
-                return true;
+            if (this.get_current_page() == -1) {
+                this.set_current_page(0);
             }
 
-            return false;
+            this.page_removed();
         }
 
-        public void set_current_page(int page) {
+        public void set_show_buttons(bool show) {
+        }
+
+        public int get_n_pages() {
+            return this.childs.length;
+        }
+
+        public void set_current_page(int? page = null, bool change_tab = true) {
             //if (page > this.childs.length) {
             //    ("Error: Index < childs.length: FAILED\n");
             //}
@@ -261,15 +716,22 @@ namespace Ontis {
             //    return;
             //}
 
+            int index;
+            if (page == null) {
+                index = this.get_current_page();
+            } else {
+                index = page;
+            }
+
             if (this.current_child != null && this.current_child.get_parent() == this.box) {
                 this.box.remove(this.current_child);
             }
 
-            this.current_page = page;
+            this.current_page = index;
             int current1 = 0;
 
             foreach (Gtk.Widget widget in this.childs) {
-                if (current1 == page) {
+                if (current1 == index) {
                     this.current_child = widget;
                     this.box.pack_start(this.current_child, true, true, 0);
                     break;
@@ -277,10 +739,12 @@ namespace Ontis {
                 current1 ++;
             }
 
-            int current2 = 0;
-            foreach (NotebookTab tab in this.tabs) {
-                tab.selected = (current2 == current1);
-                current2 ++;
+            if (change_tab) {
+                int current2 = 0;
+                foreach (Ontis.Tab tab in this.tabbox.get_tabs()) {
+                    tab.set_selected(current2 == current1);
+                    current2 ++;
+                }
             }
 
             this.box.show();
@@ -289,99 +753,23 @@ namespace Ontis {
             this.page_switched();
         }
 
-        public NotebookTab append_page(string tab_label, Gtk.Widget child) {
-            this.childs.append(child);
-            this.n_pages ++;
-
-            NotebookTab tab = new NotebookTab(tab_label, this.n_pages);
-            //tab.redraw.connect(this.redraw_from_tab);
-            this.tabs.append(tab);
-
-            if (this.n_pages == 1) {
-                this.set_current_page(0);
-            }
-
-            this.page_added();
-            return tab;
+        public int get_current_page() {
+            return this.current_page;
         }
 
-        public void remove_page(int index) {
-            if (this.n_pages == 0) {
-                return;
+        public void set_current_page_from_widget(Gtk.Widget widget) {
+            if (this.current_child != null) {
+                this.box.remove(this.current_child);
             }
 
-            int current1 = 0;
-            int current2 = 0;
-            int current3 = 1;
-
-            foreach (NotebookTab tab in this.tabs) {
-                if (current1 == index) {
-                    this.tabs.remove(tab);
-                    break;
-                }
-
-                current1 ++;
-            }
-
-            foreach (Gtk.Widget widget in this.childs) {
-                if (current2 == index) {
-                    this.childs.remove(widget);
-                    break;
-                }
-
-                current2 ++;
-            }
-
-            this.n_pages -= 1;
-
-            foreach (NotebookTab tab in this.tabs) {
-                tab.position = current3;
-                current3 ++;
-            }
-
-            if (index == this.current_page) {
-                if (this.n_pages >= index) {
-                    this.set_current_page(this.current_page);
-                } else if (this.n_pages < index && this.n_pages >= 1) {
-                    this.set_current_page(index - 1);
-                }
-            }
-
-            if (this.current_page >= this.current_page) {
-                this.set_current_page(this.current_page - 1);
-            }
-
-            if (this.current_page == -1) {
-                this.set_current_page(0);
-            }
-
-            this.page_removed();
+            this.current_child = widget;
+            this.box.pack_start(widget, true, true, 0);
         }
 
-        public void set_tab_label(int index, string label) {
-            NotebookTab tab = this.get_tab(index);
-            tab.label = label;
-        }
-
-        public string get_tab_label(int index) {
-            NotebookTab tab = this.get_tab(index);
-            return tab.label;
-        }
-
-        public void set_show_buttons(bool show) {
-            this.show_buttons = show;
-            this.buttons_space = (show)? 120: 50;
-            this.update_switcher();
-        }
-
-        public bool get_show_buttons() {
-            return this.show_buttons;
-        }
-
-        public NotebookTab? get_tab(int index) {
-            if (this.n_pages > 0) {
+        public Ontis.Tab? get_tab(int index) {
+            if (this.get_n_pages() > 0) {
                 int current = 0;
-                foreach (NotebookTab tab in this.tabs) {
+                foreach (Ontis.Tab tab in this.tabbox.get_tabs()) {
                     if (current == index) {
                         return tab;
                     }
@@ -393,242 +781,19 @@ namespace Ontis {
             return null;
         }
 
-        private void update_switcher() {
-            GLib.Idle.add(() => { this.switcher.queue_draw(); return true; });
+        public void set_tab_label(int index, string label) {
+            Ontis.Tab tab = this.get_tab(index);
+            tab.label = label;
+            this.tabbox.update();
         }
 
-        private bool redraw_switcher(Gtk.Widget switcher, Cairo.Context context) {
-            Gtk.Allocation alloc;
-            this.switcher.get_allocation(out alloc);
+        public string get_tab_label(int index) {
+            Ontis.Tab tab = this.get_tab(index);
+            return tab.label;
+        }
 
-            int width = alloc.width - this.buttons_space;  // 50 for "add tab" and window buttons
-            int height = alloc.height - top_space;
-
-            // Check the mouse position
-            int x = this.mouse_x;
-            int y = this.mouse_y;
-
-            foreach (NotebookTab tab in this.tabs) {
-                tab.mouse_in = x >= tab.x && x <= tab.x + tab.width && y >= tab.y && y <= tab.y + tab.height;
-                tab.mouse_in_close_button = x >= tab.close_x && x <= tab.close_x + tab.close_width && y >= tab.close_y && y <= tab.close_y + tab.close_height;
-            }
-
-            this.tab_add.mouse_in = x >= this.tab_add.x && x <= this.tab_add.x + this.tab_add.width + 6 && y >= this.tab_add.y && y <= this.tab_add.y + this.tab_add.height;
-
-
-            if (this.show_buttons) {
-                y += this.top_space;
-                this.button_minimize.mouse_in = x >= this.button_minimize.x && x <= this.button_minimize.x + this.button_minimize.width && y >= this.button_minimize.y && y <= this.button_minimize.y + this.button_minimize.height;
-                this.button_maximize.mouse_in = x >= this.button_maximize.x && x <= this.button_maximize.x + this.button_maximize.width && y >= this.button_maximize.y && y <= this.button_maximize.y + this.button_maximize.height;
-                this.button_close.mouse_in = x >= this.button_close.x && x <= this.button_close.x + this.button_close.width && y >= this.button_close.y && y <= this.button_close.y + this.button_close.height;
-            }
-
-            // Draw background
-            context.set_source_rgb(this.bg_color[0], this.bg_color[1], this.bg_color[2]);
-            context.rectangle(0, 0, width + this.buttons_space, height + this.top_space);
-            context.fill();
-
-            // Draw tabs
-            int max_width = this.default_tab_width;
-            if (this.n_pages > 0) {
-                if (width / this.n_pages < max_width) {
-                    max_width = width / this.n_pages;
-                }
-            }
-
-            context.translate(0, this.top_space);
-
-            int current = 0;
-
-            foreach (NotebookTab tab in this.tabs) {
-                current = tab.position - 1;
-                double br, bg, bb;
-                double tr, tg, tb;
-
-                if (tab.selected) {
-                    br = this.tab_selected_bg_color[0];
-                    bg = this.tab_selected_bg_color[1];
-                    bb = this.tab_selected_bg_color[2];
-                    tr = this.tab_selected_label_color[0];
-                    tg = this.tab_selected_label_color[1];
-                    tb = this.tab_selected_label_color[2];
-                } else if (tab.mouse_in) {
-                    br = this.tab_mouse_in_bg_color[0];
-                    bg = this.tab_mouse_in_bg_color[1];
-                    bb = this.tab_mouse_in_bg_color[2];
-                    tr = this.tab_label_color[0];
-                    tg = this.tab_label_color[1];
-                    tb = this.tab_label_color[2];
-                } else {
-                    br = this.tab_bg_color[0];
-                    bg = this.tab_bg_color[1];
-                    bb = this.tab_bg_color[2];
-                    tr = this.tab_label_color[0];
-                    tg = this.tab_label_color[1];
-                    tb = this.tab_label_color[2];
-                }
-
-                tab.x = max_width * current;
-                tab.y = 2;
-                tab.width = max_width;
-                tab.height = height - 4;
-                tab.close_x = tab.x + tab.width - 25;
-                tab.close_y = tab.y + 5;
-                tab.close_width = 10;
-                tab.close_height = 15;
-
-                // First rectangle
-                context.set_source_rgb(br, bg, bb);
-                context.rectangle(max_width * current + 10, 2, max_width - 20, height - 2);
-                context.fill();
-
-                // Draw triangles
-                context.set_line_width(2);
-
-                context.new_path();
-                context.move_to(max_width * current, height);
-                context.line_to(max_width * current + 10, 2);
-                context.line_to(max_width * current + 10, height);
-                context.close_path();
-                context.fill();
-
-                context.new_path();
-                context.move_to(max_width * (current + 1), height);
-                context.line_to(max_width * (current + 1) - 10, 2);
-                context.line_to(max_width * (current + 1) - 10, height);
-                context.close_path();
-                context.fill();
-
-                // Paint the favicon
-                Gdk.Pixbuf pixbuf = tab.pixbuf;
-                int px = max_width * current + 10;
-                int py = tab.y + tab.height / 2 - pixbuf.height / 2;
-                Gdk.cairo_set_source_pixbuf(context, pixbuf, px, py);
-                context.paint();
-
-                // Render the label
-                int max_label_width = tab.width - pixbuf.width - 20 - 10 - 5; // 20 for the triangles, 10 for the close button and 5 for space
-            	Cairo.TextExtents extents;
-	            context.text_extents(tab.label, out extents);
-
-                context.move_to(tab.width * current + pixbuf.width + 15, tab.y + tab.height / 2 + extents.height / 2);
-                context.set_font_size(this.tab_label_size);
-                context.select_font_face(this.tab_label_font, Cairo.FontSlant.NORMAL, Cairo.FontWeight.NORMAL);
-                context.set_source_rgb(tr, tg, tb);
-
-                if (extents.width <= max_label_width) {
-                    context.show_text(tab.label);
-                } else {
-                    string a = "";
-                    for (int i=1; i <= tab.label.length; i++) {
-                        string b = tab.label.slice(0, i) + "...";
-                        Cairo.TextExtents e;
-                        context.text_extents(b, out e);
-                        if (e.width > max_label_width) {
-                            context.show_text(a);
-                            break;
-                        }
-                        a = b;
-                    }
-                }
-
-                // Render the close button
-                if (tab.mouse_in_close_button) {
-                    context.set_source_rgb(this.tab_mouse_in_bg_close_button[0], this.tab_mouse_in_bg_close_button[1], this.tab_mouse_in_bg_close_button[2]);
-                } else {
-                    context.set_source_rgb(this.tab_bg_close_button[0], this.tab_bg_close_button[1], this.tab_bg_close_button[2]);
-                }
-
-                context.arc(max_width * (current + 1) - 20, height / 2, 8, 0, 2 * Math.PI);
-                context.fill();
-            }
-
-            // Draw new tab button
-            this.tab_add.x = max_width * this.n_pages + 5;
-            this.tab_add.y = height / 2 - this.tab_add.height / 2;
-            this.tab_add.height = height - 14;
-            this.tab_add.width = this.tab_add.height + 5;
-
-            if (this.tab_add.mouse_in) {
-                context.set_source_rgb(this.tab_mouse_in_bg_color[0], this.tab_mouse_in_bg_color[1], this.tab_mouse_in_bg_color[1]);
-            } else {
-                context.set_source_rgb(this.tab_bg_color[0], this.tab_bg_color[1], this.tab_bg_color[2]);
-            }
-
-            context.new_path();
-            context.move_to(this.tab_add.x, this.tab_add.y);
-            context.line_to(this.tab_add.x + this.tab_add.width, this.tab_add.y);
-            context.line_to(this.tab_add.x + this.tab_add.width + 6, this.tab_add.y + this.tab_add.height);
-            context.line_to(this.tab_add.x + 6, this.tab_add.y + this.tab_add.height);
-            context.close_path();
-            context.fill();
-
-            context.restore();
-
-            // Draw minimize, maximize/unmaximize, close buttons
-            if (this.show_buttons) {
-                int button_height = 20;
-                int button_width = (this.buttons_space - this.tab_add.width - 10) / 3;
-
-                context.set_font_size(15);
-            	Cairo.TextExtents extents;
-
-                this.button_minimize.x = width + this.tab_add.width + 10;
-                this.button_minimize.y = 2;
-                this.button_minimize.width = button_width;
-                this.button_minimize.height = button_height;
-                this.button_maximize.x = this.button_minimize.x + button_width + 1;
-                this.button_maximize.y = 2;
-                this.button_maximize.width = button_width;
-                this.button_maximize.height = button_height;
-                this.button_close.x = this.button_maximize.x + button_width + 1;
-                this.button_close.y = 2;
-                this.button_close.width = button_width;
-                this.button_close.height = button_height;
-
-                if (this.button_minimize.mouse_in) {
-                    context.set_source_rgb(this.button_mouse_in_bg_color[0], this.button_mouse_in_bg_color[1], this.button_mouse_in_bg_color[2]);
-                } else {
-                    context.set_source_rgb(this.button_bg_color[0], this.button_bg_color[1], this.button_bg_color[2]);
-                }
-
-                context.rectangle(this.button_minimize.x, this.button_minimize.y, button_width - 1, button_height);
-                context.fill();
-
-	            context.text_extents(this.button_minimize.label, out extents);
-                context.set_source_rgb(this.button_label_color[0], this.button_label_color[1], this.button_label_color[2]);
-                context.move_to(this.button_minimize.x + button_width / 2 - extents.width / 2, this.button_minimize.y + button_height / 2 + extents.height / 2);
-                context.show_text(this.button_minimize.label);
-
-                if (this.button_maximize.mouse_in) {
-                    context.set_source_rgb(this.button_mouse_in_bg_color[0], this.button_mouse_in_bg_color[1], this.button_mouse_in_bg_color[2]);
-                } else {
-                    context.set_source_rgb(this.button_bg_color[0], this.button_bg_color[1], this.button_bg_color[2]);
-                }
-
-                context.rectangle(this.button_maximize.x, this.button_maximize.y, button_width - 1, button_height);
-                context.fill();
-
-	            context.text_extents(this.button_maximize.label, out extents);
-                context.set_source_rgb(this.button_label_color[0], this.button_label_color[1], this.button_label_color[2]);
-                context.move_to(this.button_maximize.x + button_width / 2 - extents.width / 2, this.button_maximize.y + button_height / 2 + extents.height / 2);
-                context.show_text(this.button_maximize.label);
-
-                if (this.button_close.mouse_in) {
-                    context.set_source_rgb(this.button_mouse_in_bg_color[0], this.button_mouse_in_bg_color[1], this.button_mouse_in_bg_color[2]);
-                } else {
-                    context.set_source_rgb(this.button_bg_color[0], this.button_bg_color[1], this.button_bg_color[2]);
-                }
-
-                context.rectangle(this.button_close.x, this.button_close.y, button_width - 1, button_height);
-                context.fill();
-
-	            context.text_extents(this.button_close.label, out extents);
-                context.set_source_rgb(this.button_label_color[0], this.button_label_color[1], this.button_label_color[2]);
-                context.move_to(this.button_close.x + button_width / 2 - extents.width / 2, this.button_close.y + button_height / 2 + extents.height / 2);
-                context.show_text(this.button_close.label);
-            }
-            return false;
+        public Gtk.Widget[] get_childs() {
+            return this.childs;
         }
     }
 }

@@ -44,11 +44,11 @@ namespace Ontis {
 
         public Toolbar() {
             this.set_orientation(Gtk.Orientation.HORIZONTAL);
-            this.state = Utils.LoadState.LOADING;
+            this.state = Ontis.LoadState.LOADING;
 
             this.button_back = new Gtk.Button();
             this.button_back.set_sensitive(false);
-            this.button_back.set_image(Utils.get_image_from_name("go-previous", 20));
+            this.button_back.set_image(Ontis.get_image_from_name("go-previous", 20));
             this.button_back.set_relief(Gtk.ReliefStyle.NONE);
             this.button_back.button_release_event.connect(this.button_back_released);
             this.pack_start(this.button_back, false, false, 0);
@@ -58,7 +58,7 @@ namespace Ontis {
 
             this.button_forward = new Gtk.Button();
             this.button_forward.set_sensitive(false);
-            this.button_forward.set_image(Utils.get_image_from_name("go-next", 20));
+            this.button_forward.set_image(Ontis.get_image_from_name("go-next", 20));
             this.button_forward.set_relief(Gtk.ReliefStyle.NONE);
             this.button_forward.button_release_event.connect(this.button_forward_released);
             this.pack_start(this.button_forward, false, false, 0);
@@ -67,20 +67,20 @@ namespace Ontis {
             this.forward_popover = new Gtk.Popover.from_model(this.button_forward, this.forward_menu);
 
             this.button_reload = new Gtk.Button();
-            this.button_reload.set_image(Utils.get_image_from_name("view-refresh", 20));
+            this.button_reload.set_image(Ontis.get_image_from_name("view-refresh", 20));
             this.button_reload.set_relief(Gtk.ReliefStyle.NONE);
             this.pack_start(this.button_reload, false, false, 0);
 
             this.entry = new Gtk.Entry();
             this.entry.override_font(Pango.FontDescription.from_string("10"));
-            this.entry.set_icon_from_pixbuf(Gtk.EntryIconPosition.SECONDARY, Utils.get_image_from_name("non-starred-symbolic", 16).get_pixbuf());
+            this.entry.set_icon_from_pixbuf(Gtk.EntryIconPosition.SECONDARY, Ontis.get_image_from_name("non-starred-symbolic", 16).get_pixbuf());
             this.entry.set_icon_activatable(Gtk.EntryIconPosition.SECONDARY, true);
             this.entry.set_icon_tooltip_text(Gtk.EntryIconPosition.SECONDARY, "Add to bookmarks");
             this.entry.icon_press.connect(this.icon_pressed_cb);
             this.pack_start(this.entry, true, true, 0);
 
             this.button_menu = new Gtk.ToggleButton();
-            this.button_menu.set_image(Utils.get_image_from_name("preferences-system", 20));
+            this.button_menu.set_image(Ontis.get_image_from_name("preferences-system", 20));
             this.button_menu.set_relief(Gtk.ReliefStyle.NONE);
             this.button_menu.toggled.connect(this.show_menu_popover);
             this.pack_start(this.button_menu, false, false, 0);
@@ -177,7 +177,7 @@ namespace Ontis {
 
         public void set_favorite_page(bool favorite) {
             this.favorite_page = favorite;
-            this.entry.set_icon_from_pixbuf(Gtk.EntryIconPosition.SECONDARY, Utils.get_image_from_name((this.favorite_page? "starred-symbolic": "non-starred-symbolic"), 16).get_pixbuf());
+            this.entry.set_icon_from_pixbuf(Gtk.EntryIconPosition.SECONDARY, Ontis.get_image_from_name((this.favorite_page? "starred-symbolic": "non-starred-symbolic"), 16).get_pixbuf());
             if (this.favorite_page) {
                 this.show_favorite_popover();
             }
@@ -185,7 +185,7 @@ namespace Ontis {
 
         public void set_load_state(int state) {
             this.state = state;
-            Gtk.Image image = Utils.get_image_from_name((this.state == Utils.LoadState.LOADING)? "view-refresh": "window-close");
+            Gtk.Image image = Ontis.get_image_from_name((this.state == Ontis.LoadState.LOADING)? "view-refresh": "window-close");
             this.button_reload.set_image(image);
         }
 

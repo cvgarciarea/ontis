@@ -26,7 +26,7 @@ namespace Ontis {
         public Ontis.Toolbar toolbar;
         public Gtk.Entry entry;
         public Ontis.BookmarksBar bookmarks_bar;
-        public Ontis.NotebookTab tab;
+        public Ontis.Tab tab;
         public Gtk.Box hbox;
         public Ontis.WebView web_view;
         public Ontis.NewTabView newtab_view;
@@ -36,12 +36,12 @@ namespace Ontis {
         public Ontis.SettingsManager settings_manager;
         public Ontis.DownloadManager download_manager;
 
-        public Utils.ViewMode mode;
+        public Ontis.ViewMode mode;
 
         public View(Ontis.Notebook notebook, Ontis.SettingsManager settings_manager, Ontis.DownloadManager download_manager) {
             this.set_orientation(Gtk.Orientation.VERTICAL);
 
-            this.mode = Utils.ViewMode.WEB;
+            this.mode = Ontis.ViewMode.WEB;
             this.settings_manager = settings_manager;
             this.download_manager = download_manager;
 
@@ -80,7 +80,7 @@ namespace Ontis {
 
         private void title_changed_cb(Ontis.WebView view, string title, string uri) {
             this.tab.set_title(title);
-            Utils.save_to_history(uri, title);
+            Ontis.save_to_history(uri, title);
         }
 
         private void uri_changed_cb(Ontis.WebView view, string uri) {
@@ -89,33 +89,33 @@ namespace Ontis {
         }
 
         public void open(string uri) {
-            if (uri in Utils.SPECIAL_URLS) {
+            if (uri in Ontis.Consts.SPECIAL_URLS) {
                 Ontis.BaseView view = this.history_view;
-                Utils.ViewMode mode = Utils.ViewMode.HISTORY;
+                Ontis.ViewMode mode = Ontis.ViewMode.HISTORY;
                 string title = "History";
 
                 switch (uri) {
-                    case Utils.URL_NEWTAB:
+                    case Ontis.Consts.URL_NEWTAB:
                         view = this.newtab_view;
-                        mode = Utils.ViewMode.NEWTAB;
+                        mode = Ontis.ViewMode.NEWTAB;
                         title = "New Tab";
                         break;
 
-                    case Utils.URL_HISTORY:
+                    case Ontis.Consts.URL_HISTORY:
                         view = this.history_view;
-                        mode = Utils.ViewMode.HISTORY;
+                        mode = Ontis.ViewMode.HISTORY;
                         title = "History";
                         break;
 
-                    case Utils.URL_DOWNLOADS:
+                    case Ontis.Consts.URL_DOWNLOADS:
                         view = this.downloads_view;
-                        mode = Utils.ViewMode.DOWNLOADS;
+                        mode = Ontis.ViewMode.DOWNLOADS;
                         title = "Downloads";
                         break;
 
-                    case Utils.URL_SETTINGS:
+                    case Ontis.Consts.URL_SETTINGS:
                         view = this.settings_view;
-                        mode = Utils.ViewMode.SETTINGS;
+                        mode = Ontis.ViewMode.SETTINGS;
                         title = "Settings";
                         break;
                 }
@@ -126,61 +126,61 @@ namespace Ontis {
                 view.update();
 
             } else {
-                this.set_view_mode(Utils.ViewMode.WEB);
-                this.web_view.view.open(Utils.parse_uri(uri));
+                this.set_view_mode(Ontis.ViewMode.WEB);
+                this.web_view.view.open(Ontis.parse_uri(uri));
             }
         }
 
-        public void set_view_mode(Utils.ViewMode view) {
+        public void set_view_mode(Ontis.ViewMode view) {
             if (this.get_mode() == view) {
                 return;
             }
 
             switch(this.get_mode()) {
-                case Utils.ViewMode.WEB:
+                case Ontis.ViewMode.WEB:
                     this.remove(this.web_view);
                     break;
 
-                case Utils.ViewMode.NEWTAB:
+                case Ontis.ViewMode.NEWTAB:
                     this.remove(this.newtab_view);
                     break;
 
-                case Utils.ViewMode.HISTORY:
+                case Ontis.ViewMode.HISTORY:
                     this.remove(this.history_view);
                     break;
 
-                case Utils.ViewMode.DOWNLOADS:
+                case Ontis.ViewMode.DOWNLOADS:
                     this.remove(this.downloads_view);
                     break;
 
-                case Utils.ViewMode.SETTINGS:
+                case Ontis.ViewMode.SETTINGS:
                     this.remove(this.settings_view);
                     break;
             }
 
             this.mode = view;
             switch(this.get_mode()) {
-                case Utils.ViewMode.WEB:
+                case Ontis.ViewMode.WEB:
                     this.icon_loaded(this.web_view.pixbuf);
                     this.pack_start(this.web_view, true, true, 0);
                     break;
 
-                case Utils.ViewMode.NEWTAB:
+                case Ontis.ViewMode.NEWTAB:
                     this.pack_start(this.newtab_view, true, true, 0);
                     break;
 
-                case Utils.ViewMode.HISTORY:
-                    this.icon_loaded(Utils.get_history_pixbuf());
+                case Ontis.ViewMode.HISTORY:
+                    this.icon_loaded(Ontis.get_history_pixbuf());
                     this.pack_start(this.history_view, true, true, 0);
                     break;
 
-                case Utils.ViewMode.DOWNLOADS:
-                    this.icon_loaded(Utils.get_downloads_pixbuf());
+                case Ontis.ViewMode.DOWNLOADS:
+                    this.icon_loaded(Ontis.get_downloads_pixbuf());
                     this.pack_start(this.downloads_view, true, true, 0);
                     break;
 
-                case Utils.ViewMode.SETTINGS:
-                    this.icon_loaded(Utils.get_settings_pixbuf());
+                case Ontis.ViewMode.SETTINGS:
+                    this.icon_loaded(Ontis.get_settings_pixbuf());
                     this.pack_start(this.settings_view, true, true, 0);
                     break;
             }
@@ -201,9 +201,9 @@ namespace Ontis {
         }
 
         public void reload_stop(Gtk.Button? button=null) {
-            if (this.toolbar.state == Utils.LoadState.LOADING) {
+            if (this.toolbar.state == Ontis.LoadState.LOADING) {
                 this.reload();
-            } else if (this.toolbar.state == Utils.LoadState.FINISHED) {
+            } else if (this.toolbar.state == Ontis.LoadState.FINISHED) {
                 this.stop();
             }
         }
@@ -216,7 +216,7 @@ namespace Ontis {
             this.web_view.view.reload();
         }
 
-        public void set_tab(Ontis.NotebookTab tab) {
+        public void set_tab(Ontis.Tab tab) {
             this.tab = tab;
         }
 

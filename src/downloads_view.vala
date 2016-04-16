@@ -51,7 +51,7 @@ namespace Ontis {
             context.fill();
 
             if (this.pixbuf == null) {
-                this.pixbuf = Utils.get_image_from_name("text-x-generic", (int)(radius * 1.5)).get_pixbuf();
+                this.pixbuf = Ontis.get_image_from_name("text-x-generic", (int)(radius * 1.5)).get_pixbuf();
             }
 
             int px = alloc.width / 2 - pixbuf.width / 2;
@@ -153,7 +153,7 @@ namespace Ontis {
             sub_hbox.pack_start(lbutton, false, false, 0);
 
             Gtk.Button button_cancel = new Gtk.Button();
-            button_cancel.set_image(Utils.get_image_from_name("window-close", 24));
+            button_cancel.set_image(Ontis.get_image_from_name("window-close", 24));
             button_cancel.set_tooltip_text("Cancel");
             button_cancel.clicked.connect(() => { download.stop(); });
             sub_hbox.pack_end(button_cancel, false, false, 0);
@@ -169,8 +169,8 @@ namespace Ontis {
                 string total_size_unity;
                 double progress;
                 string progress_unity;
-                Utils.convert_size(download.get_total_size(), out total_size, out total_size_unity);
-                Utils.convert_size(p, out progress, out progress_unity);
+                Ontis.convert_size(download.get_total_size(), out total_size, out total_size_unity);
+                Ontis.convert_size(p, out progress, out progress_unity);
 
                 string str1 = total_size.to_string();
                 if ("." in str1) {

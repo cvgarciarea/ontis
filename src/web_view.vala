@@ -23,7 +23,7 @@ namespace Ontis {
         public signal void title_changed(string title, string url);
         public signal void icon_loaded(Gdk.Pixbuf? pixbuf);
         public signal void new_download(WebKit.Download download);
-        public signal void load_state_changed(Utils.LoadState state);
+        public signal void load_state_changed(Ontis.LoadState state);
         public signal void uri_changed(string uri);
 
         public Ontis.Cache cache;
@@ -72,8 +72,8 @@ namespace Ontis {
         }
 
         private void load_started_cb(WebKit.WebView view, WebKit.WebFrame frame) {
-            this.load_state_changed(Utils.LoadState.FINISHED);
-            //this.toolbar.set_load_state(Utils.LoadState.FINISHED);
+            this.load_state_changed(Ontis.LoadState.FINISHED);
+            //this.toolbar.set_load_state(Ontis.LoadState.FINISHED);
         }
 
         private void load_progress_changed_cb(WebKit.WebView view, int progress) {
@@ -81,12 +81,12 @@ namespace Ontis {
                 //this.entry.set_progress_fraction((double)progress / 100);
             } else {
                 //this.entry.set_progress_fraction(0.0);
-                // *this.tab.set_icon(Utils.LoadState.FINISHED);
+                // *this.tab.set_icon(Ontis.LoadState.FINISHED);
             }
         }
 
         private void load_finishied_cb(WebKit.WebView view, WebKit.WebFrame frame) {
-            this.load_state_changed(Utils.LoadState.LOADING);
+            this.load_state_changed(Ontis.LoadState.LOADING);
         }
 
         private void load_committed_cb(WebKit.WebView view, WebKit.WebFrame frame) {

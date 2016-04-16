@@ -44,7 +44,7 @@ namespace Ontis {
                 this.listbox.remove(lrow);
             }
 
-            Json.Array history = Utils.get_history();
+            Json.Array history = Ontis.get_history();
             GLib.List<unowned Json.Node> elements = history.get_elements();
             elements.reverse();
 

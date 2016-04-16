@@ -40,15 +40,15 @@ namespace Ontis {
 
             this.notebook = new Ontis.Notebook();
             this.notebook.set_show_buttons(true);
-            this.notebook.remove(this.notebook.switcher);
+            this.notebook.remove(this.notebook.tabbox);
             this.notebook.new_tab.connect(() => { this.new_page(); });
             this.notebook.minimize.connect(this.minimize_cb);
-            this.notebook.turn_maxmizie.connect(this.turn_maximize_cb);
+            this.notebook.turn_maximize.connect(this.turn_maximize_cb);
             this.notebook.close.connect(() => { this.destroy(); });
             this.notebook.page_removed.connect(this.page_removed_cb);
             this.add(this.notebook);
 
-            this.set_titlebar(this.notebook.switcher);
+            this.set_titlebar(this.notebook.tabbox);
 
             this.configure_event.connect(this.state_changed_cb);
 
@@ -69,21 +69,21 @@ namespace Ontis {
         }
 
         private void page_removed_cb(Ontis.Notebook notebook) {
-            if (this.notebook.n_pages == 0) {
+            if (this.notebook.get_n_pages() == 0) {
                 this.destroy();
             }
         }
 
         private bool state_changed_cb(Gtk.Widget widget, Gdk.EventConfigure event) { //Gdk.EventWindowState event) {
             if (this.is_maximized) {
-                this.notebook.top_space = 2;
-                this.notebook.switcher.set_size_request(1, 32);
+                //this.notebook.top_space = 2;
+                //this.notebook.switcher.set_size_request(1, 32);
             } else {
-                this.notebook.top_space = 15;
-                this.notebook.switcher.set_size_request(1, 45);
+                //this.notebook.top_space = 15;
+                //this.notebook.switcher.set_size_request(1, 45);
             }
 
-            GLib.Idle.add(() => { this.notebook.switcher.queue_draw(); return false; });
+            GLib.Idle.add(() => { this.notebook.tabbox.queue_draw(); return false; });
 
             return false;
         }
@@ -111,8 +111,8 @@ namespace Ontis {
             Ontis.View view = null;
 
             int current = 0;
-            int page = this.notebook.current_page;
-            foreach (Gtk.Widget widget in this.notebook.childs) {
+            int page = this.notebook.get_current_page();
+            foreach (Gtk.Widget widget in this.notebook.get_childs()) {
                 if (current == page) {
                     view = (widget as Ontis.View);
                     break;
@@ -124,15 +124,15 @@ namespace Ontis {
             return view;
         }
 
-        public void new_page(string? url=Utils.URL_NEWTAB) {
+        public void new_page(string? url=Ontis.Consts.URL_NEWTAB) {
             Ontis.View view = new Ontis.View(this.notebook, this.settings_manager, this.download_manager);
             view.set_vexpand(true);
             view.icon_loaded.connect(this.icon_loaded_cb);
             view.new_download.connect(this.new_download_cb);
 
-            Ontis.NotebookTab tab = this.notebook.append_page("New tab", view);
+            Ontis.Tab tab = this.notebook.append_page("New tab", view);
             view.set_tab(tab);
-            this.notebook.set_current_page(this.notebook.n_pages - 1);
+            this.notebook.set_current_page(this.notebook.get_n_pages() - 1);
 
             view.open(url);
             this.show_all();
@@ -164,7 +164,7 @@ namespace Ontis {
             this.download_manager.add_download(download);
         }
 
-        private void show_special_page(Utils.ViewMode mode) {
+        private void show_special_page(Ontis.ViewMode mode) {
             if (this.get_current_view().get_mode() == mode) {
                 return;
             }
@@ -172,22 +172,22 @@ namespace Ontis {
             string url = "";
 
             switch (mode) {
-                case Utils.ViewMode.HISTORY:
-                    url = Utils.URL_HISTORY;
+                case Ontis.ViewMode.HISTORY:
+                    url = Ontis.Consts.URL_HISTORY;
                     break;
 
-                case Utils.ViewMode.DOWNLOADS:
-                    url = Utils.URL_DOWNLOADS;
+                case Ontis.ViewMode.DOWNLOADS:
+                    url = Ontis.Consts.URL_DOWNLOADS;
                     break;
 
-                case Utils.ViewMode.SETTINGS:
-                    url = Utils.URL_SETTINGS;
+                case Ontis.ViewMode.SETTINGS:
+                    url = Ontis.Consts.URL_SETTINGS;
                     break;
             }
 
 
             int current = 0;
-            foreach (Gtk.Widget widget in this.notebook.childs) {
+            /*foreach (Gtk.Widget widget in this.notebook.childs) {
                 Ontis.View view = (widget as Ontis.View);
                 if (view.get_mode() == mode) {
                     this.notebook.set_current_page(current);
@@ -195,21 +195,21 @@ namespace Ontis {
                 }
 
                 current ++;
-            }
+            }*/
 
             this.new_page(url);
         }
 
         public void show_history() {
-            this.show_special_page(Utils.ViewMode.HISTORY);
+            this.show_special_page(Ontis.ViewMode.HISTORY);
         }
 
         public void show_downloads() {
-            this.show_special_page(Utils.ViewMode.DOWNLOADS);
+            this.show_special_page(Ontis.ViewMode.DOWNLOADS);
         }
 
         public void show_settings() {
-            this.show_special_page(Utils.ViewMode.SETTINGS);
+            this.show_special_page(Ontis.ViewMode.SETTINGS);
         }
     }
 }

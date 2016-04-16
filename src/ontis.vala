@@ -24,12 +24,12 @@ public class App: Gtk.Application {
         GLib.Object(application_id: "com.browser.Ontis", flags: GLib.ApplicationFlags.FLAGS_NONE);
     }
 
-	protected override void activate() {
-	    this.settings_manager = new Ontis.SettingsManager();
+    protected override void activate() {
+        this.settings_manager = new Ontis.SettingsManager();
 
-	    //this.register_session = true;
-	    this.window_removed.connect(this.window_removed_cb);
-	    this.add_actions();
+        //this.register_session = true;
+        this.window_removed.connect(this.window_removed_cb);
+        this.add_actions();
         this.new_window();
     }
 
@@ -49,36 +49,36 @@ public class App: Gtk.Application {
 
     public void add_actions() {
         GLib.SimpleAction action = new GLib.SimpleAction("new-tab", null);
-		action.activate.connect(this.new_tab);
-		this.add_action(action);
+        action.activate.connect(this.new_tab);
+        this.add_action(action);
 
         action = new GLib.SimpleAction("new-window", null);
-		action.activate.connect(this.new_window);
-		this.add_action(action);
+        action.activate.connect(this.new_window);
+        this.add_action(action);
 
         action = new GLib.SimpleAction("close-tab", null);
-		action.activate.connect(this.close_tab);
-		this.add_action(action);
+        action.activate.connect(this.close_tab);
+        this.add_action(action);
 
         action = new GLib.SimpleAction("history", null);
-		action.activate.connect(this.show_history);
-		this.add_action(action);
+        action.activate.connect(this.show_history);
+        this.add_action(action);
 
         action = new GLib.SimpleAction("downloads", null);
-		action.activate.connect(this.show_downloads);
-		this.add_action(action);
+        action.activate.connect(this.show_downloads);
+        this.add_action(action);
 
         action = new GLib.SimpleAction("search", null);
-		action.activate.connect(this.turn_search_bar);
-		this.add_action(action);
+        action.activate.connect(this.turn_search_bar);
+        this.add_action(action);
 
         action = new GLib.SimpleAction("settings", null);
-		action.activate.connect(this.show_settings);
-		this.add_action(action);
+        action.activate.connect(this.show_settings);
+        this.add_action(action);
 
         action = new GLib.SimpleAction("exit", null);
-		action.activate.connect(this.close_all);
-		this.add_action(action);
+        action.activate.connect(this.close_all);
+        this.add_action(action);
 
         for (int i=1; i<=10; i++) {
             action = new GLib.SimpleAction("go-back-" + i.to_string(), null);
@@ -133,25 +133,24 @@ public class App: Gtk.Application {
         Ontis.View current_view = window.get_current_view();
 
         switch (current_view.mode) {
-            case Utils.ViewMode.WEB:
+            case Ontis.ViewMode.WEB:
                 view = current_view.web_view;
                 break;
 
-            case Utils.ViewMode.HISTORY:
+            case Ontis.ViewMode.HISTORY:
                 view = current_view.history_view;
                 break;
 
-            case Utils.ViewMode.DOWNLOADS:
+            case Ontis.ViewMode.DOWNLOADS:
                 view = current_view.downloads_view;
                 break;
 
-            case Utils.ViewMode.SETTINGS:
+            case Ontis.ViewMode.SETTINGS:
                 view = current_view.settings_view;
                 break;
 
-            default:  // Never happen
-                view = current_view.history_view;
-                break;
+            default:
+                return;
         }
 
         view.turn_show_search_bar();

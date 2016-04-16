@@ -35,7 +35,7 @@ namespace Ontis {
 
         public Download(WebKit.Download download) {
             this.download = download;
-            this.path = GLib.Path.build_filename(Utils.get_download_dir(), this.get_filename());
+            this.path = GLib.Path.build_filename(Ontis.get_download_dir(), this.get_filename());
 
             this.uri = this.download.get_uri();
             this.download.set_destination_uri("file://" + this.path);
