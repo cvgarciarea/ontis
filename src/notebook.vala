@@ -328,7 +328,7 @@ namespace Ontis {
                 foreach (Ontis.Button button in this.get_buttons()) {
                     x = alloc.width + button.geom.x;
                     y = button.geom.y;
-                    width = button.geom.width;
+                    width = -button.geom.width;
                     height = button.geom.height;
 
                     button.set_mouse_over((event.x > x && event.x < x - width &&
@@ -414,9 +414,9 @@ namespace Ontis {
                 Cairo.TextExtents extents;
                 context.text_extents(tab.label, out extents);
 
-                double max_label_width = tab.geom.width - tab.pixbuf.width - 45;
                 double x_label = start_x + tab.pixbuf.width + 20;
                 double y_label = tab.geom.y + tab.geom.height / 2 + extents.height / 2 - 2;
+                double max_label_width = tab.geom.width - tab.pixbuf.width - 60;
 
                 context.move_to(x_label, y_label);
                 context.set_font_size(Ontis.Consts.TAB_LABEL_SIZE);
@@ -428,10 +428,9 @@ namespace Ontis {
                     string current_text = "";
                     for (int i=1; i <= tab.label.length; i++) {
                         string sub_text = tab.label.slice(0, i) + "...";
-                        Cairo.TextExtents sub_extents;
-                        context.text_extents(sub_text, out sub_extents);
+                        context.text_extents(sub_text, out extents);
 
-                        if (sub_extents.width > max_label_width) {
+                        if (extents.width > max_label_width) {
                             context.show_text(current_text);
                             break;
                         }
