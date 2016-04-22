@@ -330,7 +330,17 @@ namespace Ontis {
 
             if (dragging_tab != null) {
                 double z = (this.cevent.start_x - (dragging_tab.index - 1) * this.get_tab_width());
-                dragging_tab.geom.x = event.x - z;
+                double x = event.x - z;
+
+                if (x + this.get_tab_width() <= alloc.width + this.minimize_button.geom.x && x >= 0) {
+                    print("%f\n", this.minimize_button.geom.x);
+                    dragging_tab.geom.x = x;
+                } else if (x < 0) {
+                    dragging_tab.geom.x = 0;
+                } else if (x > alloc.width + this.minimize_button.geom.x) {
+                    dragging_tab.geom.x = alloc.width + this.minimize_button.geom.x;
+                }
+
                 this.update();
             } else {
                 if (tab != null) {
@@ -454,7 +464,7 @@ namespace Ontis {
             context.paint();
 
             // Render label
-            if (tab.get_state() == Ontis.TabState.SELECTED) {
+            if (tab.get_state() == Ontis.TabState.SELECTED || tab.get_state() == Ontis.TabState.DRAGGING) {
                 Ontis.get_rgb(Ontis.Colors.TAB_SELECTED_LABEL_COLOR, out r, out g, out b);
             } else {
                 Ontis.get_rgb(Ontis.Colors.TAB_LABEL_COLOR, out r, out g, out b);
@@ -510,20 +520,22 @@ namespace Ontis {
                 context.fill();
             }
 
-            double start_x = this.get_tab_width() * this.tabs.length;
-            double start_y = alloc.height / 2 - this.new_tab_button.geom.height / 4;
-            double border = 10;
-            double width = this.new_tab_button.geom.width;
-            double height = this.new_tab_button.geom.height;
+            if (this.get_dragging_tab() == null) {
+                double start_x = this.get_tab_width() * this.tabs.length;
+                double start_y = alloc.height / 2 - this.new_tab_button.geom.height / 4;
+                double border = 10;
+                double width = this.new_tab_button.geom.width;
+                double height = this.new_tab_button.geom.height;
 
-            this.get_widget_color(this.new_tab_button, out r, out g, out b);
-            context.set_source_rgb(r, g, b);
+                this.get_widget_color(this.new_tab_button, out r, out g, out b);
+                context.set_source_rgb(r, g, b);
 
-            context.move_to(start_x + border, start_y + height);
-            context.line_to(start_x + border + width, start_y + height);
-            context.line_to(start_x + width, start_y);
-            context.line_to(start_x, start_y);
-            context.fill();
+                context.move_to(start_x + border, start_y + height);
+                context.line_to(start_x + border + width, start_y + height);
+                context.line_to(start_x + width, start_y);
+                context.line_to(start_x, start_y);
+                context.fill();
+            }
         }
 
         private void state_changed_cb(Ontis.TabState state) {
