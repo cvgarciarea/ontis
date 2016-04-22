@@ -137,6 +137,7 @@ namespace Ontis {
     public class Tab: Ontis.BaseWidget {
 
         public int index = 0;
+        public int? new_index = null;
         public Gtk.Widget? widget = null;
 
         public Tab(string label, int index, Gtk.Widget widget) {
@@ -304,12 +305,16 @@ namespace Ontis {
             Ontis.Tab? dragging_tab = this.get_dragging_tab();
 
             if (dragging_tab == null) {
-                // Active widgets when the mouse button is  released
+                // Active widgets when the mouse button is released
                 this.new_tab_button.set_selected(this.new_tab_button.get_state() == Ontis.TabState.MOUSE_OVER);
                 foreach (Ontis.Button button in this.get_buttons()) {
                     button.set_selected(button.get_state() == Ontis.TabState.MOUSE_OVER);
                 }
             } else {
+                if (this.tabs.length > 1) {
+                    dragging_tab.index = dragging_tab.new_index;
+                    dragging_tab.new_index = null;
+                }
                 dragging_tab.set_state(Ontis.TabState.SELECTED);
             }
 
@@ -329,16 +334,33 @@ namespace Ontis {
             this.get_allocation(out alloc);
 
             if (dragging_tab != null) {
-                double z = (this.cevent.start_x - (dragging_tab.index - 1) * this.get_tab_width());
+                int index = dragging_tab.index - 1;
+                if (dragging_tab.geom.x + this.get_tab_width() < this.cevent.actual_x) {
+                    index += 1;
+                }
+
+                double z = (this.cevent.start_x - (index * this.get_tab_width()));
                 double x = event.x - z;
 
                 if (x + this.get_tab_width() <= alloc.width + this.minimize_button.geom.x && x >= 0) {
-                    print("%f\n", this.minimize_button.geom.x);
                     dragging_tab.geom.x = x;
                 } else if (x < 0) {
                     dragging_tab.geom.x = 0;
                 } else if (x > alloc.width + this.minimize_button.geom.x) {
                     dragging_tab.geom.x = alloc.width + this.minimize_button.geom.x;
+                }
+
+                int new_index = (int)(this.cevent.actual_x / this.get_tab_width()) + 1;
+                int actual_index = (dragging_tab.new_index != null)? dragging_tab.new_index: dragging_tab.index;
+
+                foreach (Ontis.Tab itab in this.tabs) {
+                    if (new_index > actual_index && itab.index == new_index) {
+                        itab.index -= 1;
+                        dragging_tab.new_index = new_index;
+                    } else if (new_index < actual_index && itab.index == new_index) {
+                        itab.index += 1;
+                        dragging_tab.new_index = new_index;
+                    }
                 }
 
                 this.update();
@@ -439,9 +461,9 @@ namespace Ontis {
             this.get_widget_color(tab, out r, out g, out b);
             context.set_source_rgb(r, g, b);
 
-            int index = tab.index;
+            int index = tab.index - 1;
 
-            tab.geom.x = (tab.get_state() == Ontis.TabState.DRAGGING)? tab.geom.x: tab_width * (index - 1);
+            tab.geom.x = (tab.get_state() == Ontis.TabState.DRAGGING)? tab.geom.x: tab_width * index;
             tab.geom.y = 10;
             tab.geom.width = tab_width;
             tab.geom.height = sheight - tab.geom.y;
