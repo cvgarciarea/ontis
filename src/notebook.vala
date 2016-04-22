@@ -400,81 +400,92 @@ namespace Ontis {
         }
 
         private void draw_widgets(Cairo.Context context) {
-            this.draw_tabs(context);
+            Ontis.Tab? dragging_tab = null;
+
+            foreach (Ontis.Tab tab in this.tabs) {
+                if (tab.get_state() == Ontis.TabState.DRAGGING) {
+                    dragging_tab = tab;
+                } else {
+                    this.draw_tab(context, tab);
+                }
+            }
+
+            if (dragging_tab != null) {
+                this.draw_tab(context, dragging_tab);
+            }
+
             this.draw_buttons(context);
         }
 
-        private void draw_tabs(Cairo.Context context) {
+        private void draw_tab(Cairo.Context context, Ontis.Tab tab) {
             Gtk.Allocation alloc;
             this.get_allocation(out alloc);
 
             int sheight = alloc.height;
             double tab_width = this.get_tab_width();
 
-            foreach (Ontis.Tab tab in this.tabs) {
-                // Render poligon
-                double r, g, b;
-                this.get_widget_color(tab, out r, out g, out b);
-                context.set_source_rgb(r, g, b);
+            // Render poligon
+            double r, g, b;
+            this.get_widget_color(tab, out r, out g, out b);
+            context.set_source_rgb(r, g, b);
 
-                int index = tab.index;
+            int index = tab.index;
 
-                tab.geom.x = (tab.get_state() == Ontis.TabState.DRAGGING)? tab.geom.x: tab_width * (index - 1);
-                tab.geom.y = 10;
-                tab.geom.width = tab_width;
-                tab.geom.height = sheight - tab.geom.y;
+            tab.geom.x = (tab.get_state() == Ontis.TabState.DRAGGING)? tab.geom.x: tab_width * (index - 1);
+            tab.geom.y = 10;
+            tab.geom.width = tab_width;
+            tab.geom.height = sheight - tab.geom.y;
 
-                double p1 = tab.geom.x;
-                double p2 = tab.geom.x + tab_width;
-                double p3 = tab.geom.x + tab_width - 15;
-                double p4 = tab.geom.x + 15;
+            double p1 = tab.geom.x;
+            double p2 = tab.geom.x + tab_width;
+            double p3 = tab.geom.x + tab_width - 15;
+            double p4 = tab.geom.x + 15;
 
-                context.move_to(p1, sheight);
-                context.line_to(p2, sheight);
-                context.line_to(p3, tab.geom.y);
-                context.line_to(p4, tab.geom.y);
-                context.fill();
+            context.move_to(p1, sheight);
+            context.line_to(p2, sheight);
+            context.line_to(p3, tab.geom.y);
+            context.line_to(p4, tab.geom.y);
+            context.fill();
 
-                // Render pixbuf
-                double px = tab.geom.x + 15;
-                double py = tab.geom.y + tab.geom.height / 2 - tab.pixbuf.height / 2;
-                Gdk.cairo_set_source_pixbuf(context, tab.pixbuf, px, py);
-                context.paint();
+            // Render pixbuf
+            double px = tab.geom.x + 15;
+            double py = tab.geom.y + tab.geom.height / 2 - tab.pixbuf.height / 2;
+            Gdk.cairo_set_source_pixbuf(context, tab.pixbuf, px, py);
+            context.paint();
 
-                // Render label
-                if (tab.get_state() == Ontis.TabState.SELECTED) {
-                    Ontis.get_rgb(Ontis.Colors.TAB_SELECTED_LABEL_COLOR, out r, out g, out b);
-                } else {
-                    Ontis.get_rgb(Ontis.Colors.TAB_LABEL_COLOR, out r, out g, out b);
-                }
-                
-                context.set_source_rgb(r, g, b);
+            // Render label
+            if (tab.get_state() == Ontis.TabState.SELECTED) {
+                Ontis.get_rgb(Ontis.Colors.TAB_SELECTED_LABEL_COLOR, out r, out g, out b);
+            } else {
+                Ontis.get_rgb(Ontis.Colors.TAB_LABEL_COLOR, out r, out g, out b);
+            }
+            
+            context.set_source_rgb(r, g, b);
 
-                Cairo.TextExtents extents;
-                context.text_extents(tab.label, out extents);
+            Cairo.TextExtents extents;
+            context.text_extents(tab.label, out extents);
 
-                double x_label = tab.geom.x + tab.pixbuf.width + 20;
-                double y_label = tab.geom.y + tab.geom.height / 2 + extents.height / 2 - 2;
-                double max_label_width = tab.geom.width - tab.pixbuf.width - 60;
+            double x_label = tab.geom.x + tab.pixbuf.width + 20;
+            double y_label = tab.geom.y + tab.geom.height / 2 + extents.height / 2 - 2;
+            double max_label_width = tab.geom.width - tab.pixbuf.width - 60;
 
-                context.move_to(x_label, y_label);
-                context.set_font_size(Ontis.Consts.TAB_LABEL_SIZE);
-                context.select_font_face(Ontis.Consts.TAB_LABEL_FONT, Cairo.FontSlant.NORMAL, Cairo.FontWeight.NORMAL);
+            context.move_to(x_label, y_label);
+            context.set_font_size(Ontis.Consts.TAB_LABEL_SIZE);
+            context.select_font_face(Ontis.Consts.TAB_LABEL_FONT, Cairo.FontSlant.NORMAL, Cairo.FontWeight.NORMAL);
 
-                if (extents.width <= max_label_width) {
-                    context.show_text(tab.label);
-                } else {
-                    string current_text = "";
-                    for (int i=1; i <= tab.label.length; i++) {
-                        string sub_text = tab.label.slice(0, i) + "...";
-                        context.text_extents(sub_text, out extents);
+            if (extents.width <= max_label_width) {
+                context.show_text(tab.label);
+            } else {
+                string current_text = "";
+                for (int i=1; i <= tab.label.length; i++) {
+                    string sub_text = tab.label.slice(0, i) + "...";
+                    context.text_extents(sub_text, out extents);
 
-                        if (extents.width > max_label_width) {
-                            context.show_text(current_text);
-                            break;
-                        }
-                        current_text = sub_text;
+                    if (extents.width > max_label_width) {
+                        context.show_text(current_text);
+                        break;
                     }
+                    current_text = sub_text;
                 }
             }
         }
