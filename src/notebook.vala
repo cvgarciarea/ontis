@@ -25,6 +25,13 @@ namespace Ontis {
         public double height;
     }
 
+    public struct ClickEvent {
+        public double? start_x;
+        public double? start_y;
+        public double? actual_x;
+        public double? actual_y;
+    }
+
     public class BaseWidget: GLib.Object {
 
         public signal void redraw();
@@ -216,6 +223,7 @@ namespace Ontis {
         public signal void close();
 
         private Ontis.Tab[] tabs;
+        public Ontis.ClickEvent cevent;
 
         public Ontis.NewTabButton new_tab_button;
         public Ontis.CloseButton close_button;
@@ -224,6 +232,12 @@ namespace Ontis {
 
         public TabBox() {
             this.tabs = { };
+            this.cevent = Ontis.ClickEvent() {
+                start_x = null,
+                start_y = null,
+                actual_x = null,
+                actual_y = null
+            };
 
             this.new_tab_button = new Ontis.NewTabButton();
             this.new_tab_button.redraw.connect(() => { this.update(); });
@@ -261,6 +275,11 @@ namespace Ontis {
         }
 
         private bool button_press_cb(Gtk.Widget self, Gdk.EventButton event) {
+            this.cevent.start_x = event.x;
+            this.cevent.start_y = event.y;
+            this.cevent.actual_x = event.x;
+            this.cevent.actual_y = event.y;
+
             Ontis.Tab? tab = this.get_tab_at_point(event.x, event.y);
 
             if (tab != null) {
@@ -276,15 +295,13 @@ namespace Ontis {
         }
 
         private bool button_release_cb(Gtk.Widget self, Gdk.EventButton event) {
-            // Check if is dragging
-            Ontis.Tab? dragging_tab = null;
+            this.cevent.start_x = null;
+            this.cevent.start_y = null;
+            this.cevent.actual_x = null;
+            this.cevent.actual_y = null;
 
-            foreach (Ontis.Tab tab in this.tabs) {
-                if (tab.get_state() == Ontis.TabState.DRAGGING) {
-                    dragging_tab = tab;
-                    break;
-                }
-            }
+            // Check if is dragging
+            Ontis.Tab? dragging_tab = this.get_dragging_tab();
 
             if (dragging_tab == null) {
                 // Active widgets when the mouse button is  released
@@ -292,47 +309,70 @@ namespace Ontis {
                 foreach (Ontis.Button button in this.get_buttons()) {
                     button.set_selected(button.get_state() == Ontis.TabState.MOUSE_OVER);
                 }
+            } else {
+                dragging_tab.set_state(Ontis.TabState.SELECTED);
             }
 
             return false;
         }
 
         private bool pointer_motion_cb(Gtk.Widget self, Gdk.EventMotion event) {
+            if (this.cevent.start_x != null) {
+                this.cevent.actual_x = event.x;
+                this.cevent.actual_y = event.y;
+            }
+
             Ontis.Tab? tab = this.get_tab_at_point(event.x, event.y);
+            Ontis.Tab? dragging_tab = this.get_dragging_tab();
 
             Gtk.Allocation alloc;
             this.get_allocation(out alloc);
 
-            if (tab != null) {
-                foreach (Ontis.Tab ctab in this.tabs) {
-                    if (ctab.get_state() != Ontis.TabState.SELECTED) { // FIXME: and when is dragging?
-                        ctab.set_mouse_over(ctab == tab);
-                    }
-                }
+            if (dragging_tab != null) {
+                double z = (this.cevent.start_x - (dragging_tab.index - 1) * this.get_tab_width());
+                dragging_tab.geom.x = event.x - z;
+                this.update();
             } else {
-                // Set all tabs to normal
-                foreach (Ontis.Tab ctab in this.tabs) {
-                    ctab.set_mouse_over(false);
-                }
+                if (tab != null) {
+                    foreach (Ontis.Tab ctab in this.tabs) {
+                        if (ctab.get_state() != Ontis.TabState.SELECTED && ctab.get_state() != Ontis.TabState.DRAGGING) { // FIXME: and when is dragging?
+                            ctab.set_mouse_over(ctab == tab);
+                        } else if (ctab.get_state() == Ontis.TabState.SELECTED && this.cevent.start_x != null) {
+                            dragging_tab = this.get_tab_at_point(this.cevent.start_x, this.cevent.start_y);
 
-                // First check for "New Tab button"
-                double x = (this.get_tab_width() * this.tabs.length) + this.new_tab_button.geom.x;
-                double y = alloc.height / 2 - this.new_tab_button.geom.height / 4;
-                double width = this.new_tab_button.geom.width + 10;
-                double height = this.new_tab_button.geom.height;
+                            if (dragging_tab == ctab) {
+                                ctab.set_state(Ontis.TabState.DRAGGING);
+                                double z = (this.cevent.start_x - (dragging_tab.index - 1) * this.get_tab_width());
+                                dragging_tab.geom.x = event.x - z;
+                                this.update();
+                            }
+                        }
+                    }
+                } else {
+                    // Set all tabs to normal
+                    foreach (Ontis.Tab ctab in this.tabs) {
+                        ctab.set_mouse_over(false);
+                    }
 
-                this.new_tab_button.set_mouse_over((event.x > x && event.x < x + width &&
-                                                    event.y > y && event.y < y + height));
+                    // First check for "New Tab button"
+                    double x = (this.get_tab_width() * this.tabs.length) + this.new_tab_button.geom.x;
+                    double y = alloc.height / 2 - this.new_tab_button.geom.height / 4;
+                    double width = this.new_tab_button.geom.width + 10;
+                    double height = this.new_tab_button.geom.height;
 
-                // Now check for other widgets (no tabs and no button new tab)
-                foreach (Ontis.Button button in this.get_buttons()) {
-                    x = alloc.width + button.geom.x;
-                    y = button.geom.y;
-                    width = -button.geom.width;
-                    height = button.geom.height;
+                    this.new_tab_button.set_mouse_over((event.x > x && event.x < x + width &&
+                                                        event.y > y && event.y < y + height));
 
-                    button.set_mouse_over((event.x > x && event.x < x - width &&
-                                           event.y > y && event.y < y + height));
+                    // Now check for other widgets (no tabs and no button new tab)
+                    foreach (Ontis.Button button in this.get_buttons()) {
+                        x = alloc.width + button.geom.x;
+                        y = button.geom.y;
+                        width = -button.geom.width;
+                        height = button.geom.height;
+
+                        button.set_mouse_over((event.x > x && event.x < x - width &&
+                                               event.y > y && event.y < y + height));
+                    }
                 }
             }
 
@@ -378,17 +418,16 @@ namespace Ontis {
                 context.set_source_rgb(r, g, b);
 
                 int index = tab.index;
-                double start_x = tab_width * (index - 1);
 
-                tab.geom.x = start_x;
+                tab.geom.x = (tab.get_state() == Ontis.TabState.DRAGGING)? tab.geom.x: tab_width * (index - 1);
                 tab.geom.y = 10;
                 tab.geom.width = tab_width;
                 tab.geom.height = sheight - tab.geom.y;
 
-                double p1 = start_x;
-                double p2 = start_x + tab_width;
-                double p3 = start_x + tab_width - 15;
-                double p4 = start_x + 15;
+                double p1 = tab.geom.x;
+                double p2 = tab.geom.x + tab_width;
+                double p3 = tab.geom.x + tab_width - 15;
+                double p4 = tab.geom.x + 15;
 
                 context.move_to(p1, sheight);
                 context.line_to(p2, sheight);
@@ -397,7 +436,7 @@ namespace Ontis {
                 context.fill();
 
                 // Render pixbuf
-                double px = start_x + 15;
+                double px = tab.geom.x + 15;
                 double py = tab.geom.y + tab.geom.height / 2 - tab.pixbuf.height / 2;
                 Gdk.cairo_set_source_pixbuf(context, tab.pixbuf, px, py);
                 context.paint();
@@ -414,7 +453,7 @@ namespace Ontis {
                 Cairo.TextExtents extents;
                 context.text_extents(tab.label, out extents);
 
-                double x_label = start_x + tab.pixbuf.width + 20;
+                double x_label = tab.geom.x + tab.pixbuf.width + 20;
                 double y_label = tab.geom.y + tab.geom.height / 2 + extents.height / 2 - 2;
                 double max_label_width = tab.geom.width - tab.pixbuf.width - 60;
 
@@ -586,6 +625,19 @@ namespace Ontis {
                     r = g = b = 0;
                     break;
             }
+        }
+
+        public Ontis.Tab? get_dragging_tab() {
+            Ontis.Tab? dragging_tab = null;
+
+            foreach (Ontis.Tab tab in this.tabs) {
+                if (tab.get_state() == Ontis.TabState.DRAGGING) {
+                    dragging_tab = tab;
+                    break;
+                }
+            }
+
+            return dragging_tab;
         }
     }
 
