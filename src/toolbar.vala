@@ -18,10 +18,79 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 namespace Ontis {
 
+    public class FavoritePopover: Gtk.Popover {
+
+        public signal void save_bookmark();
+        public signal void remove_bookmark();
+
+        public bool? saved = null;
+
+        public Gtk.Widget father;
+        public Gtk.Entry entry;
+        public Gtk.Button button_remove;
+        public Gtk.Button button_done;
+
+        public FavoritePopover(Gtk.Widget father, string name, Gdk.Rectangle rect) {
+            this.father = father;
+            this.set_relative_to(this.father);
+
+            this.set_border_width(8);
+            this.set_position(Gtk.PositionType.BOTTOM);
+            this.set_pointing_to(rect);
+
+            Gtk.Grid grid = new Gtk.Grid();
+            grid.set_row_spacing(4);
+            grid.set_column_spacing(4);
+            this.add(grid);
+
+            Gtk.Label label = new Gtk.Label(null);
+            label.set_markup("<big><b>Bookmark</b></big>");
+            label.set_xalign(0);
+            grid.attach(label, 0, 0, 2, 1);
+
+            label = new Gtk.Label("Name:");
+            grid.attach(label, 0, 1, 1, 1);
+
+            this.entry = new Gtk.Entry();
+            this.entry.set_text(name);
+            grid.attach(this.entry, 1, 1, 2, 1);
+
+            this.button_remove = new Gtk.Button.with_label("Remove");
+            this.button_remove.clicked.connect(this.remove_cb);
+            grid.attach(this.button_remove, 1, 2, 1, 1);
+
+            this.button_done = new Gtk.Button.with_label("Done");
+            this.button_done.clicked.connect(this.done_cb);
+            grid.attach(this.button_done, 2, 2, 1, 1);
+
+            this.hide.connect(this.hide_cb);
+        }
+
+        private void done_cb(Gtk.Button? button) {
+            this.saved = true;
+            this.save_bookmark();
+            this.hide();
+        }
+
+        private void remove_cb(Gtk.Button? button) {
+            this.saved = false;
+            this.remove_bookmark();
+            this.hide();
+        }
+
+        private void hide_cb(Gtk.Widget? widget) {
+            if (this.saved == null) {
+                this.remove_cb(null);
+            }
+        }
+    }
+
     public class Toolbar: Gtk.Box {
 
         public signal void go_back(int step);
         public signal void go_forward(int step);
+
+        public Ontis.Tab? tab;
 
         public Gtk.Button button_back;
         public GLib.Menu back_menu;
@@ -150,28 +219,9 @@ namespace Ontis {
             rect.width = rect_width;
             rect.height = rect_height;
 
-            Gtk.Popover popover = new Gtk.Popover(this.entry);
-            popover.set_border_width(8);
-            popover.set_position(Gtk.PositionType.BOTTOM);
-            popover.set_pointing_to(rect);
-
-            Gtk.Grid grid = new Gtk.Grid();
-            grid.set_row_spacing(4);
-            grid.set_column_spacing(4);
-            popover.add(grid);
-
-            Gtk.Label label = new Gtk.Label(null);
-            label.set_markup("<big><b>Bookmark</b></big>");
-            label.set_xalign(0);
-            grid.attach(label, 0, 0, 2, 1);
-
-            label = new Gtk.Label("Name:");
-            grid.attach(label, 0, 1, 1, 1);
-
-            grid.attach(new Gtk.Entry(), 1, 1, 2, 1);
-            grid.attach(new Gtk.Button.with_label("Remove"), 1, 2, 1, 1);
-            grid.attach(new Gtk.Button.with_label("Done"), 2, 2, 1, 1);
-
+            string name = (this.tab != null)? this.tab.get_title(): "";
+            Ontis.FavoritePopover popover = new Ontis.FavoritePopover(this.entry, name, rect);
+            popover.remove_bookmark.connect(this.dismark_star_icon);
             popover.show_all();
         }
 
@@ -253,6 +303,14 @@ namespace Ontis {
             }
 
             return false;
+        }
+
+        private void dismark_star_icon(Ontis.FavoritePopover popover) {
+            this.set_favorite_page(false);
+        }
+
+        public void set_tab(Ontis.Tab? tab = null) {
+            this.tab = tab;
         }
     }
 }

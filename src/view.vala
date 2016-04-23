@@ -218,6 +218,7 @@ namespace Ontis {
 
         public void set_tab(Ontis.Tab tab) {
             this.tab = tab;
+            this.toolbar.set_tab(this.tab);
         }
 
         public int get_mode() {
