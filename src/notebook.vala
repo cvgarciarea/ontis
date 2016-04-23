@@ -311,7 +311,7 @@ namespace Ontis {
                     button.set_selected(button.get_state() == Ontis.TabState.MOUSE_OVER);
                 }
             } else {
-                if (this.tabs.length > 1) {
+                if (this.tabs.length > 1 && dragging_tab.new_index != null) {
                     dragging_tab.index = dragging_tab.new_index;
                     dragging_tab.new_index = null;
                 }

@@ -40,7 +40,7 @@ namespace Ontis {
 
             this.notebook = new Ontis.Notebook();
             this.notebook.set_show_buttons(true);
-            //this.notebook.remove(this.notebook.tabbox);
+            this.notebook.remove(this.notebook.tabbox);
             this.notebook.new_tab.connect(() => { this.new_page(); });
             this.notebook.minimize.connect(this.minimize_cb);
             this.notebook.turn_maximize.connect(this.turn_maximize_cb);
@@ -48,7 +48,7 @@ namespace Ontis {
             this.notebook.page_removed.connect(this.page_removed_cb);
             this.add(this.notebook);
 
-            //this.set_titlebar(this.notebook.tabbox);
+            this.set_titlebar(this.notebook.tabbox);
 
             this.configure_event.connect(this.state_changed_cb);
 
