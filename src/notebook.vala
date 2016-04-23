@@ -499,7 +499,7 @@ namespace Ontis {
 
             double x_label = tab.geom.x + tab.pixbuf.width + 20;
             double y_label = tab.geom.y + tab.geom.height / 2 + extents.height / 2 - 2;
-            double max_label_width = tab.geom.width - tab.pixbuf.width - 60;
+            double max_label_width = tab.geom.width - tab.pixbuf.width - 40;
 
             context.move_to(x_label, y_label);
 
