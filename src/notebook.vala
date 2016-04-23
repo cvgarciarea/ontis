@@ -190,7 +190,7 @@ namespace Ontis {
     public class MaximizeButton: Ontis.Button {
 
         public MaximizeButton() {
-            this.label = "-"; // FIXME: Replace it with a pixbuf;
+            this.label = " -"; // FIXME: Replace it with a pixbuf;
             this.set_geom(-62, 2, 30, 25);
         }
     }
@@ -198,7 +198,7 @@ namespace Ontis {
     public class MinimizeButton: Ontis.Button {
 
         public MinimizeButton() {
-            this.label = "_"; // FIXME: Replace it with a pixbuf;
+            this.label = " _"; // FIXME: Replace it with a pixbuf;
             this.set_geom(-93, 2, 30, 25);
         }
     }
@@ -491,6 +491,9 @@ namespace Ontis {
             
             context.set_source_rgb(r, g, b);
 
+            context.set_font_size(Ontis.Consts.TAB_LABEL_SIZE);
+            context.select_font_face(Ontis.Consts.TAB_LABEL_FONT, Cairo.FontSlant.NORMAL, Cairo.FontWeight.NORMAL);
+
             Cairo.TextExtents extents;
             context.text_extents(tab.label, out extents);
 
@@ -499,8 +502,6 @@ namespace Ontis {
             double max_label_width = tab.geom.width - tab.pixbuf.width - 60;
 
             context.move_to(x_label, y_label);
-            context.set_font_size(Ontis.Consts.TAB_LABEL_SIZE);
-            context.select_font_face(Ontis.Consts.TAB_LABEL_FONT, Cairo.FontSlant.NORMAL, Cairo.FontWeight.NORMAL);
 
             if (extents.width <= max_label_width) {
                 context.show_text(tab.label);
@@ -537,6 +538,18 @@ namespace Ontis {
                 context.set_source_rgb(r, g, b);
                 context.rectangle(alloc.width + x, y, width, height);
                 context.fill();
+
+                context.set_font_size(Ontis.Consts.TAB_LABEL_SIZE);
+                context.select_font_face(Ontis.Consts.TAB_LABEL_FONT, Cairo.FontSlant.NORMAL, Cairo.FontWeight.BOLD);
+
+                Cairo.TextExtents extents;
+                context.text_extents(button.label, out extents);
+
+                Ontis.get_rgb(Ontis.Colors.TAB_LABEL_COLOR, out r, out g, out b);
+
+                context.move_to(alloc.width + x + extents.width, y + height / 2 + extents.height / 2);
+                context.set_source_rgb(r, g, b);
+                context.show_text(button.label);
             }
 
             if (this.get_dragging_tab() == null) {
